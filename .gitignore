@@ -1,0 +1,11 @@
+/pom.xml
+*jar
+/lib
+/classes
+/native
+/.lein-failures
+/checkouts
+/.lein-deps-sum
+*~
+/src/solutions_dashboard/config.clj
+/resources/public/bootstrap
