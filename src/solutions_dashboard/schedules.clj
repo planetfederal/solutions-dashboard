@@ -10,7 +10,7 @@
 
 (deftype Task []
   org.quartz.Job
-  (execute [this contenxt]
+  (execute [this context]
     (println (str "The job run at " (Date.)))))
 
 (defn make-job-details [job name group]
