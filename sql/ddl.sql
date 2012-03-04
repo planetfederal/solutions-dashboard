@@ -1,17 +1,11 @@
 
-drop table if exists projects;
+drop table if exists employees;
 
-create table projects ( 
-       id serial primary key,
-       name varchar(255)
-);
-
-drop table if exists employess;
-
-create table employess (
-       id         int primary key,
-       first_name varchar(255),
-       last_name  varchar(255),
-       email      varchar(255),
-       is_active  boolean
+create table employees (
+       id              serial primary key,
+       first_name      varchar(255),
+       last_name       varchar(255),
+       trello_username varchar(255),
+       email           varchar(255),
+       add_at          timestamp DEFAULT current_timestamp
 );       
