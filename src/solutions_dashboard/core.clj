@@ -20,58 +20,35 @@ total hours spent this month (or week? or other time duration?)
 "
 (ns solutions-dashboard.core
   (:use
-   [hiccup.core :only (html)]
-   [hiccup.page-helpers :only (doctype include-js include-css)]
    [ring.adapter.jetty-servlet :only (run-jetty)]
-   [solutions-dashboard.trello :only (generate-priorities-by-person)]
-   [compojure.core :only (defroutes GET ANY POST)])
+   [compojure.core :only (defroutes GET ANY POST DELETE)])
   (:require
+   [solutions-dashboard.views  :as views]
+   [solutions-dashboard.config :as config]
    [compojure.handler  :as handler]
    [compojure.response :as response]
    [compojure.route    :as route]
    [clojure.java.jdbc  :as sql]
    [clojure.data.json  :as json]))
 
-(defn page [request options body]
-  (html
-   (doctype :html4)
-   [:head
-    [:meta {:http-equiv "content-type" :content "text/html; charset=utf-8"}]
-    [:meta {:charset "utf-8"}]
-    [:title (:title options "dashboard")]
-    (include-css "/bootstrap/css/bootstrap.min.css")
-    (:header options)]
-   [:body body]))
-
-
-(defn show-projects [req]
-  (page
-   req {}
-   [:ol 
-    (for [person '()]
-      [:li [:h2 (:fullName person)]
-       [:ol 
-        (for [project (:projects person)]
-          [:li [:h3 (:name project)]
-           [:ol 
-            (for [task (:tasks project)]
-              [:li
-               [:p (str (:name task) ", Due: " (or (:due task) "None")) ]]
-              )]])]])]))
-
-
-(defn show-user-info [req]
-  (page req {} [:div "Hello"]))
-
-
 (defroutes main-routes
-  (GET "/" [] show-projects)
-  (GET "/show-user-info" [] show-user-info)
+  (GET    "/"          [] views/index)
+  (GET    "/employees" [] views/show-all-employees)
+  (POST   "/employees/add" [] views/create-employee)
+  (DELETE "/employees" [] views/remove-employee)
   (route/resources "/" )
   (route/not-found (str "unable to find route")))
 
+(defn wrap-dev-db-connection [handler]
+  (fn [request]
+    (sql/with-connection config/db
+      (sql/transaction
+       (handler request)))))
+
 (def app
-  (handler/site main-routes))
+  (-> main-routes
+      handler/site
+      wrap-dev-db-connection))
 
 (defn run-server []
   (run-jetty #'app {:port 3000 :join? false}))
