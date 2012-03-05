@@ -1,52 +1,59 @@
 /* Javascript code to handle user interaction on the main page
- * Requres jquery
- *
+ * Requres jquery, underscore
  */
 
 /* function to add an user to the employee table */
-var add_employee = function(employee, table) { }; 
+"use strict";
+var format_error = function(e) { 
+  return 'Error: ' + e.responseText;
+}
+
+var add_employee = function (employee, table) {
+  var tr = $('<tr/>').appendTo(table);
+  $('<td><a href="/employee/' + employee.id + ' ">' + employee.name + '</a></td>').appendTo(tr);
+  $('<td>' + employee.email + '</td>').appendTo(tr);
+  $('<td><a href="#">Remove employee</a></td>').appendTo(tr);
+};
 
 /* function to render employess in a html list */
-var get_employees = function() { 
-  var table = $('#show-all-employees');
+var get_employees = function (table) {
+
   $.ajax({
     url: '/employees',
     dataType: 'json',
-    success: function(es) { 
+    success: function (es) {
       _.each(es, function(e) { 
-        var tr = $('<tr/>').appendTo(table);
-        $('<td><a href="/employee/'+ e.id +' ">'+ e.name +'</a></td>').appendTo(tr);
-        $('<td>'+ e.email + '</td>').appendTo(tr);
+        add_employee(e, table);
       });
     },
-    error: function(error){ 
-      alert('error');
+    error: function (e) {
+      alert(format_error(e));
     }
   });
-
+  
 };
 
+/* main function to render the home page */
+$(function () {
 
-$(function(){
-  get_employees();
-  
-  $('#add-employee').submit(function() { 
+  var table = $('#show-all-employees');
+  get_employees(table);
+
+
+  $('#add-employee').submit(function () { 
     var form = $(this);
-    
     $.ajax({
       url : '/employees/add',
       type: 'POST',
       dataType: 'json',
       data: form.serializeArray(),
-      success: function(d) { 
-        // reload the employee list
-        // ideally this should only append the list 
-        // not reload the whole thing
-        get_employees();
-        // clear the html form
-        form.find(':input').each(function() { this.value = ''}); 
+      success: function (d) { 
+        add_employee(d, table);
+        form.find(':input').each(function() { this.value = '';}); 
       },
-      error: function(e) {alert(e)}
+      error: function (e) {
+        alert(format_error(e));
+      }
     });
     
     return false; // do not allow the normal form behavior

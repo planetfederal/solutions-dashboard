@@ -37,7 +37,7 @@
 
 
 (defn page-not-found [req]
-  (page req {} [:div [:h3 "We where unable to find the page you where looking"]]))
+  (page req {} [:div.well [:h3 "We where unable to find the page you where looking."]]))
 
 (defn json-response
   "Function to correctly format the json response for the api"
@@ -67,6 +67,10 @@
   (page req {:header (list (include-js "/index.js"))}
         [:div
          [:div.well [:h4 about-text]]
+         [:ul.nav.nav-tabs
+          [:li.active [:a {:href "/"} "Manage employees"]]
+          [:li [:a {:href "/resources-dashboard"} "Resources Dashboard"]]
+          [:li [:a {:href "/project-dashboard"} "Project Dashboard"]]]
          [:div#add-new-employee (add-employee-form req)]
          [:table#show-all-employees.table.table-bordered
           [:thead [:tr [:td "Employee name"] [:td "Employee email"]]]]]))
@@ -78,6 +82,8 @@
   [req]
   (json-response (get-all-employees)))
 
+(defn show-employee [req])
+
 (defn blank?
   "Function to check if a value is a string and if its blank"
   [s]
@@ -88,7 +94,8 @@
 (def check-employee-form
   (validations
    (validate-val "name" blank? {:name "The name must be a string"})
-   (validate-val "trello_username" blank? {:trello_name "The trello account number must be a string"})
+   (validate-val "trello_username" blank?
+                 {:trello_name "The trello account number must be a string"})
    (validate-val "email" blank? {:email "The trello account number must be a string"})))
 
 
@@ -101,7 +108,9 @@
   [req]
   (let [form (:form-params req)
         errors (check-employee-form form)]
-    (if errors (json-response errors 400) (insert-employee! form))))
+    (if errors (json-response errors 400)
+        (json-response
+         (insert-employee! form)))))
 
 (defn remove-employee
   "We all need to be able to remove employees"
