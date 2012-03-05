@@ -95,23 +95,6 @@
 (defn insert-employee! [data]
   (sql/insert-record :employees data))
 
-(defn blank?
-  "Function to check if a value is a string and if its blank"
-  [s]
-  (if (string? s)
-    (if (= (count s) 0)
-      false true) false))
-
-(def check-employee-form
-  (validations
-   (validate-val "name" blank? {:name "The name must be a string"})
-   (validate-val "trello_username" blank? {:trello_name "The trello account number must be a string"})
-   (validate-val "email" blank? {:email "The trello account number must be a string"})))
-
-
-(defn insert-employee! [data]
-  (sql/insert-record :employees data))
-
 (defn create-employee
   "Method to create an employee
    Returns a 201 if the creation is successful."
