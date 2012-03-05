@@ -1,4 +1,5 @@
 (ns solutions-dashboard.trello 
+  (:import [java.util Date])
   (:require
    [postal.core :as postal]
    [solutions-dashboard.config :as config]
@@ -49,10 +50,32 @@
   In the solutions dashboard boards are projects and
   cards are task."
   [person]
-  (let [user-info (make-trello-api-call :get
-                                       (str "members/" person)
-                                       {:boards "all" :board_fields "all" :cards "all" :card_fields "all"})
+  (println (str "Fetching the user information from Trello" (Date.)))
+  (let [user-info (make-trello-api-call
+                   :get
+                   (str "members/" person)
+                   {:boards "all" :board_fields "all" :cards "all" :card_fields "all"})
         grouped-tasks (group-by :idBoard (:cards user-info))]
     (dissoc  (assoc user-info :projects
                     (for [project (:boards user-info)]
-                      (assoc project  :tasks (get grouped-tasks (:id project)))))  :boards :cards)))
+                      (assoc project  :tasks (get grouped-tasks (:id project)))))
+             :boards :cards)))
+
+
+(defn display-user-priorities
+  "Function to handle displaying the employee's info"
+  [employee]
+  (let [employee-info (get-user-projects (:trello_username employee))]
+    [:div [:h3 (str "Employee: "(:name employee))]
+     [:table.table.table-bordered
+      [:thead [:tr [:th "Projects"] [:th "Tasks"]]]
+      [:tbody
+       (for [project (:projects employee-info)]
+         [:tr
+          [:td (:name project)]
+          [:td
+           [:table
+            (for [task (:tasks project)]
+              [:tr
+               [:td [:a {:href (:url task)}  (:name task)]]
+               [:td (or (:due task) "None")]])]]])]]]))

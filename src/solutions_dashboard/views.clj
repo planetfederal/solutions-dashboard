@@ -4,6 +4,8 @@
    [hiccup.page :only (html5 include-js include-css)])
   (:require
    [solutions-dashboard.config :as config]
+   [solutions-dashboard.trello :as trello]
+   
    [hiccup.form        :as form]
    [clojure.data.json  :as json]
    [clojure.java.jdbc  :as sql]))
@@ -61,6 +63,10 @@
   (sql/with-query-results rs ["select * from employees"]
     (into [] rs)))
 
+(defn get-employee [id]
+  (sql/with-query-results rs ["select * from employees where id = ?" id]
+    (first rs)))
+
 (defn index
   "Main page, loads all of the javascript for the page"
   [req]
@@ -73,7 +79,7 @@
           [:li [:a {:href "/project-dashboard"} "Project Dashboard"]]]
          [:div#add-new-employee (add-employee-form req)]
          [:table#show-all-employees.table.table-bordered
-          [:thead [:tr [:td "Employee name"] [:td "Employee email"]]]]]))
+          [:thead [:tr [:th "Employee name"] [:th "Employee email"]]]]]))
 
 
 (defn show-all-employees
@@ -82,7 +88,12 @@
   [req]
   (json-response (get-all-employees)))
 
-(defn show-employee [req])
+(defn show-employee
+  [req]
+  (let [employee (get-employee (Integer/parseInt (:id (:params req))))]
+    (page req {}
+          (trello/display-user-priorities employee))))
+
 
 (defn blank?
   "Function to check if a value is a string and if its blank"
