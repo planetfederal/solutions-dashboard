@@ -32,7 +32,7 @@
   "Formats and sends a priority email to an employee"
   [e]
   (let [[user password] config/mail-config]
-    (send-test-email user password (:email e)
+    (send-email user password (:email e)
                      (hiccup.core/html (trello/display-user-priorities e)))))
 
 (defn send-priorities!

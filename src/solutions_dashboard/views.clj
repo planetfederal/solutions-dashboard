@@ -79,7 +79,10 @@
           [:li [:a {:href "/project-dashboard"} "Project Dashboard"]]]
          [:div#add-new-employee (add-employee-form req)]
          [:table#show-all-employees.table.table-bordered
-          [:thead [:tr [:th "Employee name"] [:th "Employee email"]]]]]))
+          [:thead [:tr
+                   [:th "Employee name"]
+                   [:th "Employee email"]
+                   [:th "Remove link"]]]]]))
 
 
 (defn show-all-employees
@@ -125,4 +128,7 @@
 
 (defn remove-employee
   "We all need to be able to remove employees"
-  [req])
+  [req]
+  (let [id (Integer/parseInt (:id (:params req)))]
+    (sql/delete-rows :employees ["id=?" id])
+    (json-response "okay")))
