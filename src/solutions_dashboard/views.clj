@@ -35,6 +35,7 @@
     (:header options)]
    [:body [:div.container (nav-bar request) body]]))
 
+
 (defn page-not-found [req]
   (page req {} [:div [:h3 "We where unable to find the page you where looking"]]))
 
@@ -70,11 +71,29 @@
          [:table#show-all-employees.table.table-bordered
           [:thead [:tr [:td "Employee name"] [:td "Employee email"]]]]]))
 
+
 (defn show-all-employees
   "View to show all of the currently configured employees
    returns a 200 response with a json list of all of the employees"
   [req]
   (json-response (get-all-employees)))
+
+(defn blank?
+  "Function to check if a value is a string and if its blank"
+  [s]
+  (if (string? s)
+    (if (= (count s) 0)
+      false true) false))
+
+(def check-employee-form
+  (validations
+   (validate-val "name" blank? {:name "The name must be a string"})
+   (validate-val "trello_username" blank? {:trello_name "The trello account number must be a string"})
+   (validate-val "email" blank? {:email "The trello account number must be a string"})))
+
+
+(defn insert-employee! [data]
+  (sql/insert-record :employees data))
 
 (defn blank?
   "Function to check if a value is a string and if its blank"
