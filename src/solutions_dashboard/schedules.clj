@@ -1,39 +1,74 @@
 (ns solutions-dashboard.schedules
+  (:require
+   [clojure.java.jdbc :as sql]
+   [solutions-dashboard.trello :as trello]
+   [solutions-dashboard.config :as config]
+   [postal.core :as postal])
   (:import
    [java.util Date]
    [org.quartz Job]
    [org.quartz JobBuilder]
    [org.quartz DateBuilder]
+   [org.quartz CronScheduleBuilder]
    [org.quartz TriggerBuilder]
    [org.quartz.impl StdSchedulerFactory]))
 
 
+(defn send-test-email [user password body]
+  (postal/send-message
+   #^{:host "smtp.gmail.com"
+      :user user
+      :pass password
+      :ssl :yes!!!11}
+   {:from "iwillig@gmail.com"
+    :to ["iwillig@opengeo.org"]
+    :subject "hello"
+    :body body}))
+
+(defn send-employee-priorities
+  "Formats and sends a priority email to an employee"
+  [employee]
+  (trello/get-user-projects  (:trello_username employee)))
+
+(defn send-priorities!
+  "Function to send all of the priorities to each employee"
+  []
+  (sql/with-connection config/db
+    (sql/with-query-results employees ["select * from employees"]
+      (doseq [employee employees]
+        (send-employee-priorities employee)))))
+
 (deftype Task []
   org.quartz.Job
   (execute [this context]
-    (println (str "The job run at " (Date.)))))
+    (println "Starting priorities")
+    (send-priorities!)))
 
-(defn make-job-details [job name group]
+(defn make-job-details
+  "Function to make building the job details less of a pain"
+  [job name group]
   (let [b (JobBuilder/newJob (class job))]
     (.withIdentity b name group)
     (.build b)))
 
-(defn make-trigger [name group run-at]
+(defn make-cron-trigger
+  "Function to make building a cron trigger easier"
+  [name group cron]
   (let [b (TriggerBuilder/newTrigger)]
     (.withIdentity b name group)
-    (.startAt b run-at)
+    (.withSchedule b (CronScheduleBuilder/cronSchedule cron))
     (.build b)))
 
+(defn boot-schedule
+  "Function to boot the scheduler"
+  [sched]
+  (let [job (Task.)
+        job-d (make-job-details job "job1" "group1")
+        ;; for now run the job every 30 seconds
+        trigger (make-cron-trigger "trigger1" "group1" "0,30 * * * * ?")]
+    (.scheduleJob sched job-d trigger)
+    (.start sched)))
 
 (defn -main [& args]
-  (let [sched (StdSchedulerFactory/getDefaultScheduler)
-        run-at (DateBuilder/evenSecondDate (Date.))
-        job (Task.)
-        job-d (make-job-details job "job1" "group1")
-        trigger (make-trigger "trigger1" "group1" run-at)]
-    (println (str "Booting the main project"))
-    (println (str "Job" (.getKey job-d) "at" run-at))
-    (.scheduleJob sched job-d trigger)
-    (.start sched)
-    (Thread/sleep 10000)
-    (.shutdown sched true)))
+  (let [sched (StdSchedulerFactory/getDefaultScheduler)]
+    (boot-schedule sched) sched))

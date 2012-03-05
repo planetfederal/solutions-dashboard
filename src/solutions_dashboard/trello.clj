@@ -56,20 +56,3 @@
     (dissoc  (assoc user-info :projects
                     (for [project (:boards user-info)]
                       (assoc project  :tasks (get grouped-tasks (:id project)))))  :boards :cards)))
-
-
-(defn send-test-email [user password]
-  (postal/send-message
-   #^{:host "smtp.gmail.com"
-      :user user
-      :pass password
-      :ssl :yes!!!11}
-   {:from "iwillig@gmail.com"
-    :to ["iwillig@opengeo.org"]
-    :subject "hello"
-    :body "this is a test" }))
-
-(defn -main [& args]
-  (let [people (get-opengeo-people)]
-    (doseq [person people]
-      (time (get-user-projects (:username person))))))

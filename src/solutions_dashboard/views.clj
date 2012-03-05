@@ -1,17 +1,25 @@
 (ns solutions-dashboard.views
   (:use
+   [decline.core :only (validations validate-val)]
    [hiccup.page :only (html5 include-js include-css)])
   (:require
+   [solutions-dashboard.config :as config]
    [hiccup.form        :as form]
    [clojure.data.json  :as json]
    [clojure.java.jdbc  :as sql]))
+
+(defn write-json-timestamp [x out escape-unicode?]
+  (json/write-json (str x) out escape-unicode?))
+
+(extend java.sql.Timestamp json/Write-JSON
+        {:write-json write-json-timestamp})
 
 (def title-text "OpenGeo Solutions Dashboard")
 (def about-text "Welcome to the OpenGeo Dashboard, from here you should be
    able to get an overview of all of the ongoing projects")
 
 (defn nav-bar [req]
-  [:div.navbar [:div.navbar-inner [:div.container [:h1.brand title-text]]]])
+  [:div.navbar [:div.navbar-inner [:div.container [:h1.brand [:a {:href "/"} title-text]]]]])
 
 (defn page
   "Base function to generate a basic page"
@@ -27,7 +35,12 @@
     (:header options)]
    [:body [:div.container (nav-bar request) body]]))
 
-(defn json-response [data & [status]]
+(defn page-not-found [req]
+  (page req {} [:div [:h3 "We where unable to find the page you where looking"]]))
+
+(defn json-response
+  "Function to correctly format the json response for the api"
+  [data & [status]]
   {:status (or status 200)
    :headers {"Content-Type" "application/json"}
    :body (json/json-str data)})
@@ -35,16 +48,17 @@
 (defn add-employee-form [req]
   [:form#add-employee.well
    [:fieldset 
-    (form/label :first_name "Employee's first name")
-    (form/text-field :first_name)
-    (form/label :last_name "Employee's last name")
-    (form/text-field :last_name)
+    (form/label :name "Employee's name")
+    (form/text-field :name)
     (form/label :trello_username "Employee's Trello name")
     (form/text-field :trello_username)
     (form/label :email "Employee's Email address")
     (form/text-field :email)]
-
    [:button.btn-primary.btn-large "Add a new user"]])
+
+(defn get-all-employees []
+  (sql/with-query-results rs ["select * from employees"]
+    (into [] rs)))
 
 (defn index
   "Main page, loads all of the javascript for the page"
@@ -52,23 +66,40 @@
   (page req {:header (list (include-js "/index.js"))}
         [:div
          [:div.well [:h4 about-text]]
-         [:div#show-all-employees]
-         [:div#add-new-employee (add-employee-form req)]]))
-
+         [:div#add-new-employee (add-employee-form req)]
+         [:table#show-all-employees.table.table-bordered
+          [:thead [:tr [:td "Employee name"] [:td "Employee email"]]]]]))
 
 (defn show-all-employees
   "View to show all of the currently configured employees
    returns a 200 response with a json list of all of the employees"
   [req]
-  (json-response
-   (sql/with-query-results rs ["select * from employees"]
-     (into [] rs))))
+  (json-response (get-all-employees)))
+
+(defn blank?
+  "Function to check if a value is a string and if its blank"
+  [s]
+  (if (string? s)
+    (if (= (count s) 0)
+      false true) false))
+
+(def check-employee-form
+  (validations
+   (validate-val "name" blank? {:name "The name must be a string"})
+   (validate-val "trello_username" blank? {:trello_name "The trello account number must be a string"})
+   (validate-val "email" blank? {:email "The trello account number must be a string"})))
+
+
+(defn insert-employee! [data]
+  (sql/insert-record :employees data))
 
 (defn create-employee
   "Method to create an employee
    Returns a 201 if the creation is successful."
   [req]
-  (json-response (:form-params req)))
+  (let [form (:form-params req)
+        errors (check-employee-form form)]
+    (if errors (json-response errors 400) (insert-employee! form))))
 
 (defn remove-employee
   "We all need to be able to remove employees"

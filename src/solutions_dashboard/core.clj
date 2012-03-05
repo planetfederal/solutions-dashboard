@@ -28,8 +28,7 @@ total hours spent this month (or week? or other time duration?)
    [compojure.handler  :as handler]
    [compojure.response :as response]
    [compojure.route    :as route]
-   [clojure.java.jdbc  :as sql]
-   [clojure.data.json  :as json]))
+   [clojure.java.jdbc  :as sql]))
 
 (defroutes main-routes
   (GET    "/"          [] views/index)
@@ -37,7 +36,7 @@ total hours spent this month (or week? or other time duration?)
   (POST   "/employees/add" [] views/create-employee)
   (DELETE "/employees" [] views/remove-employee)
   (route/resources "/" )
-  (route/not-found (str "unable to find route")))
+  (route/not-found (views/page-not-found {})))
 
 (defn wrap-dev-db-connection [handler]
   (fn [request]

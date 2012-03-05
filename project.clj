@@ -7,13 +7,14 @@
 
                  [compojure "1.0.1"]
                  [flutter "0.0.7"]
+                 [clj-decline "0.0.5"]
+
                  [org.quartz-scheduler/quartz "2.1.2"]
                  [org.slf4j/slf4j-api "1.6.4"]
                  [org.slf4j/slf4j-simple "1.6.4"]
                  [com.draines/postal "1.7-SNAPSHOT"]
                  [org.clojure/java.jdbc "0.1.1"]
                  [org.clojure/data.json "0.1.2"]
-
                  [postgresql "9.0-801.jdbc4"]]
   :dev-dependencies [[swank-clojure "1.4.0"]
                      [lein-ring "0.5.4"]]
