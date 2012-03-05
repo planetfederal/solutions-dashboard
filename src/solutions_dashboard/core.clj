@@ -28,8 +28,7 @@ total hours spent this month (or week? or other time duration?)
    [compojure.handler  :as handler]
    [compojure.response :as response]
    [compojure.route    :as route]
-   [clojure.java.jdbc  :as sql]
-   [clojure.data.json  :as json]))
+   [clojure.java.jdbc  :as sql]))
 
 (defroutes main-routes
   (GET    "/"          [] views/index)
