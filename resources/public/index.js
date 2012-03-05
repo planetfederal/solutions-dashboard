@@ -6,24 +6,26 @@
 
 /* function to render employess in a html list */
 
-var get_current_employees = function(div) {
-
+var get_employees = function() { 
+  var ol = $('#show-all-employees');
+  ol.empty();
   $.ajax({
     url: '/employees',
-    success: function(employees){ 
-      var list = "<% _.each(employees, function(name) { %> <li><%= name %></li> <% }); %>";
-      div.html(function() { return _.template(list, {employees: employees}) });
+    dataType: 'json',
+    success: function(es) { 
+      _.each(es, function(e) { 
+        $('<li>' + e.name +'</li>').appendTo(ol);
+      });
     },
-    error: function(error) {
-      alert('Something went wrong' + error);
+    error: function(error){ 
+      alert('error');
     }
   });
 
 };
 
 $(function(){
-  var employee_list = $('#show-all-employees')
-  get_current_employees(employee_list);
+  get_employees();
   
   $('#add-employee').submit(function() { 
     var form = $(this);
@@ -33,7 +35,14 @@ $(function(){
       type: 'POST',
       dataType: 'json',
       data: form.serializeArray(),
-      success: function(d) {},
+      success: function(d) { 
+        // reload the employee list
+        // ideally this should only append the list 
+        // not reload the whole thing
+        get_employees();
+        // clear the html form
+        form.find(':input').each(function() { this.value = ''}); 
+      },
       error: function(e) {alert(e)}
     });
     
