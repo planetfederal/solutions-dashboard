@@ -1,22 +1,3 @@
-"Client name
-project name
-project code (maybe use to distinguish between time&materials, fixed price, etc.?)
-budget?
-list of tasks
-for each task:
-  task name
-  hours budgeted
-  hours spent (this month?)
-  list of people
-
-for each person
-name
-rate
-total budgeted hours
-total hours spent (entire project duration)
-total hours spent this month (or week? or other time duration?)
-
-"
 (ns solutions-dashboard.core
   (:use
    [ring.adapter.jetty-servlet :only (run-jetty)]
@@ -33,9 +14,9 @@ total hours spent this month (or week? or other time duration?)
 (defroutes main-routes
   (GET    "/"          [] views/index)
   (GET    "/employees" [] views/show-all-employees)
-  (GET    "/employee/:id" [id] views/show-employee)
+  (GET    "/employees/:id" [id] views/show-employee)
   (POST   "/employees" [] views/create-employee)
-  (DELETE "/employees" [] views/remove-employee)
+  (DELETE "/employees/:id" [] views/remove-employee)
   (route/resources "/" )
   (route/not-found (views/page-not-found {})))
 

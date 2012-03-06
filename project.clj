@@ -7,7 +7,6 @@
                  [ring-json-params "0.1.3"]
                  [compojure "1.0.1"]
                  [clj-decline "0.0.5"]
-
                  [org.quartz-scheduler/quartz "2.1.2"]
                  [org.slf4j/slf4j-api "1.6.4"]
                  [org.slf4j/slf4j-simple "1.6.4"]
