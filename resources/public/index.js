@@ -11,10 +11,9 @@ var format_error = function (e) {
 
 
 /* */
-var populate_form = function (options) {
-
-  var form = options.form,
-      fields = options.fields;
+var populate_form = function (options) { 
+  var form = options.form;
+  var fields = options.fields;
 
   _.map(fields, function(field) { 
 
@@ -174,6 +173,7 @@ var Application = Backbone.Router.extend({
         view.render(app);
       }
     });
+
   },
 
   index: function () { 
