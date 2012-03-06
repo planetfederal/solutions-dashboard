@@ -63,11 +63,12 @@
   [req]
   (page req
         {:header (list (include-js "/index.js"))}
-        [:div#application
-         [:ul.nav.nav-tabs
-          [:li.active [:a  "Employee list"]]
-          [:li [:a "Resources Dashboard"]]
-          ]]))
+        [:div
+         [:ul#dash-nav.nav.nav-tabs
+          [:li#index.active [:a {:href ""} "Employee list"]]
+          [:li#new [:a {:href "#new"} "Add an employee"]]
+          [:li#resocure [:a "Resources Dashboard"]]]
+         [:div#application]]))
 
 (defn show-all-employees
   "View to show all of the currently configured employees
