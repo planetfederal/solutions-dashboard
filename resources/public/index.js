@@ -1,16 +1,17 @@
 /* Javascript code to handle user interaction on the main page
- * Requres jquery, underscore
+ * Requres jquery, underscore, backbone.js
  */
 
-/* function to add an user to the employee table */
+
 "use strict";
 
+/* function to add an user to the employee table */
 var format_error = function (e) {
   return 'Error: ' + e.responseText;
  };
 
 
-/* */
+/* function to populate a from an array of objects */
 var populate_form = function (options) { 
   var form = options.form;
   var fields = options.fields;
@@ -123,14 +124,17 @@ var ViewEmployee = Backbone.View.extend({
     var remove = $('<a/>', {text: 'Remove user', 
                             'class': 'btn btn-danger'}).appendTo(tool_list);
     remove.click(function () {
-      model.destroy({
-        success: function () { 
-          window.location = '/';
-        },
-        error: function (m, e) { 
-          alert(e);
-        }
-      });
+      var rm = confirm('Are you sure you want to remove this user?');
+      if (rm) { 
+        model.destroy({
+          success: function () { 
+            window.location = '/';
+          },
+          error: function (m, e) { 
+            alert(e);
+          }
+        });
+      };
     });
 
     $('<h3/>', {text: this.model.get('name')}).appendTo(wrap);    
