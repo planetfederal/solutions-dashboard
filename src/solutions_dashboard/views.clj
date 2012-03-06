@@ -34,6 +34,7 @@
     (include-css "/bootstrap/css/bootstrap.min.css")
     (include-js "/jquery-1.7.1.min.js")
     (include-js "/underscore-min.js")
+    (include-js "/backbone.js")
     (:header options)]
    [:body [:div.container (nav-bar request) body]]))
 
@@ -48,16 +49,6 @@
    :headers {"Content-Type" "application/json"}
    :body (json/json-str data)})
 
-(defn add-employee-form [req]
-  [:form#add-employee.well
-   [:fieldset 
-    (form/label :name "Employee's name")
-    (form/text-field :name)
-    (form/label :trello_username "Employee's Trello name")
-    (form/text-field :trello_username)
-    (form/label :email "Employee's Email address")
-    (form/text-field :email)]
-   [:button.btn-primary.btn-large "Add a new user"]])
 
 (defn get-all-employees []
   (sql/with-query-results rs ["select * from employees"]
@@ -70,20 +61,13 @@
 (defn index
   "Main page, loads all of the javascript for the page"
   [req]
-  (page req {:header (list (include-js "/index.js"))}
-        [:div
-         [:div.well [:h4 about-text]]
+  (page req
+        {:header (list (include-js "/index.js"))}
+        [:div#application
          [:ul.nav.nav-tabs
-          [:li.active [:a {:href "/"} "Manage employees"]]
-          [:li [:a {:href "/resources-dashboard"} "Resources Dashboard"]]
-          [:li [:a {:href "/project-dashboard"} "Project Dashboard"]]]
-         [:div#add-new-employee (add-employee-form req)]
-         [:table#show-all-employees.table.table-bordered
-          [:thead [:tr
-                   [:th "Employee name"]
-                   [:th "Employee email"]
-                   [:th "Remove link"]]]]]))
-
+          [:li.active [:a  "Employee list"]]
+          [:li [:a "Resources Dashboard"]]
+          ]]))
 
 (defn show-all-employees
   "View to show all of the currently configured employees
@@ -97,7 +81,6 @@
     (page req {}
           (trello/display-user-priorities employee))))
 
-
 (defn blank?
   "Function to check if a value is a string and if its blank"
   [s]
@@ -107,10 +90,10 @@
 
 (def check-employee-form
   (validations
-   (validate-val "name" blank? {:name "The name must be a string"})
-   (validate-val "trello_username" blank?
+   (validate-val :name blank? {:name "The name must be a string"})
+   (validate-val :trello_username blank?
                  {:trello_name "The trello account number must be a string"})
-   (validate-val "email" blank? {:email "The trello account number must be a string"})))
+   (validate-val :email blank? {:email "The trello account number must be a string"})))
 
 
 (defn insert-employee! [data]
@@ -120,11 +103,10 @@
   "Method to create an employee
    Returns a 201 if the creation is successful."
   [req]
-  (let [form (:form-params req)
+  (let [form (:params req)
         errors (check-employee-form form)]
     (if errors (json-response errors 400)
-        (json-response
-         (insert-employee! form)))))
+        (json-response (insert-employee! form)))))
 
 (defn remove-employee
   "We all need to be able to remove employees"

@@ -1,5 +1,4 @@
-"
-Client name
+"Client name
 project name
 project code (maybe use to distinguish between time&materials, fixed price, etc.?)
 budget?
@@ -21,6 +20,7 @@ total hours spent this month (or week? or other time duration?)
 (ns solutions-dashboard.core
   (:use
    [ring.adapter.jetty-servlet :only (run-jetty)]
+   [ring.middleware.json-params :only (wrap-json-params)]
    [compojure.core :only (defroutes GET ANY POST DELETE)])
   (:require
    [solutions-dashboard.views  :as views]
@@ -34,7 +34,7 @@ total hours spent this month (or week? or other time duration?)
   (GET    "/"          [] views/index)
   (GET    "/employees" [] views/show-all-employees)
   (GET    "/employee/:id" [id] views/show-employee)
-  (POST   "/employees/add" [] views/create-employee)
+  (POST   "/employees" [] views/create-employee)
   (DELETE "/employees" [] views/remove-employee)
   (route/resources "/" )
   (route/not-found (views/page-not-found {})))
@@ -48,6 +48,7 @@ total hours spent this month (or week? or other time duration?)
 (def app
   (-> main-routes
       handler/site
+      wrap-json-params
       wrap-dev-db-connection))
 
 (defn run-server []

@@ -4,91 +4,121 @@
 
 /* function to add an user to the employee table */
 "use strict";
+
 var format_error = function(e) { 
   return 'Error: ' + e.responseText;
-}
-
-var remove_user = function (e) { 
-  var id = e.target.id.split('-')[1];
-  var remove_p = confirm('Are you sure that you want to remove that user?');
-  if (remove_p) { 
-    $.ajax({
-      url: '/employees',
-      type: 'DELETE',
-      data: {id: id},
-      success: function() {
-        var row = $('#row-' + id);
-        row.remove();
-      }
-    })
-  };
 };
 
-/* function to add an employee to the employee table */
-var add_employee = function (employee, table) {
-  var tr = $('<tr/>', {id: 'row-' + employee.id}).appendTo(table);
+var make_table = function(options) {
 
-  $('<a/>', { text: employee.name, 
-              href: '/employee/' + employee.id})
-    .appendTo($('<td/>').appendTo(tr));
+  var klasses = options.klasses.join(' ');
+  var id = options.id
+  var headers = options.headers;
 
-  $('<td/>',{text: employee.email}).appendTo(tr);
+  var _table = $('<table/>', {id: id, 'class': klasses});
+  var _thead = $('<thead/>').appendTo(_table);
+  var _tr    = $('<tr/>').appendTo(_thead);
+  var _tbody = $('<tbody/>').appendTo(_table);
 
-  var ahref = $('<a/>', { href: '#',
-              'class': 'remove-links',
-              id: 'ahref-' + employee.id,
-              text: 'Remove employee'})
-    .appendTo($('<td/>').appendTo(tr))
-
-  ahref.click(function (e) { remove_user(e); });
-
-};
-
-/* function to render employess in a html list */
-var get_employees = function (table) {
-
-  $.ajax({
-    url: '/employees',
-    dataType: 'json',
-    success: function (es) {
-      _.each(es, function(e) { 
-        add_employee(e, table);
-      });
-    },
-    error: function (e) {
-      alert(format_error(e));
-    }
-  });
+  _.each(headers, function (h) {
     
- 
-  
+    $('<th/>',{text: h.text}).appendTo(_tr);
+
+  });
+  return _table;
 };
 
-var table;
-/* main function to render the home page */
-$(function () {
+var Employee = Backbone.Model.extend({
+  url: function () { 
+    var base_url = 'employees';
 
-  var table = $('#show-all-employees');
-  get_employees(table);
+    if (this.isNew()) { 
+      return base_url; 
+    } else { 
+      return base_url + '/' + this.id;
+    };
+  }
+});
 
 
-  $('#add-employee').submit(function () { 
-    var form = $(this);
-    $.ajax({
-      url : '/employees/add',
-      type: 'POST',
-      dataType: 'json',
-      data: form.serializeArray(),
-      success: function (d) { 
-        add_employee(d, table);
-        form.find(':input').each(function() { this.value = '';}); 
-      },
-      error: function (e) {
-        alert(format_error(e));
-      }
+var Employees = Backbone.Collection.extend({
+    model: Employee,
+    url: '/employees'
+});
+
+
+var Index = Backbone.View.extend({
+
+  render: function () { 
+
+    var el = $(this.el);
+
+    var table = make_table({
+      id: 'employee-table',
+      klasses: ['table', 'table-bordered',],
+      headers: [{text: 'Employee name'}, 
+                {text: 'Employee email'},
+                {text: 'Employee trello'}]
+    });
+
+    table.appendTo(el);
+
+    this.collection.each(function (e) { 
+
+      var tr = $('<tr/>').appendTo(table);
+      $('<td/>', {text: e.get('name')}).appendTo(tr);
+      $('<td/>', {text: e.get('email')}).appendTo(tr);
+      $('<td/>', {text: e.get('trello_username')}).appendTo(tr);
+
     });
     
-    return false; // do not allow the normal form behavior
-  });
+  }
 
+});
+
+var Application = Backbone.Router.extend({
+
+  routes: { 
+    '' : 'index',
+    'new': 'new',    
+  },
+
+  index: function () { 
+    var employees = new Employees();
+    employees.fetch({
+      success: function () {
+        var view = new Index({
+          collection: employees,
+          el: $('#application')
+        });
+        view.render();
+      },
+      error: function () { 
+        console.log('error');
+      }
+    })
+  },
+  
+  new: function () { 
+  }
+
+})
+
+
+var App = {
+
+  Views: {},
+  Controllers: {},
+  init: function() { 
+    new Application();
+    Backbone.history.start();
+  }
+};
+
+
+/* main function to render the home page */
+$(function () {
+  App.init();
+  var table = $('#show-all-employees');
+  
 });
