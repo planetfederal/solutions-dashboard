@@ -21,7 +21,9 @@
    able to get an overview of all of the ongoing projects")
 
 (defn nav-bar [req]
-  [:div.navbar [:div.navbar-inner [:div.container [:h1.brand [:a {:href "/"} title-text]]]]])
+  [:div.navbar [:div.navbar-inner
+                [:div.container [:h1.brand
+                                 [:a.brand {:href "/"} title-text]]]]])
 
 (defn page
   "Base function to generate a basic page"
@@ -79,8 +81,7 @@
 (defn show-employee
   [req]
   (let [employee (get-employee (Integer/parseInt (:id (:params req))))]
-    (page req {}
-          (trello/display-user-priorities employee))))
+    (json-response employee)))
 
 (defn blank?
   "Function to check if a value is a string and if its blank"

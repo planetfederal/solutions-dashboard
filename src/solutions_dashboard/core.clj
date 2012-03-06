@@ -33,7 +33,7 @@ total hours spent this month (or week? or other time duration?)
 (defroutes main-routes
   (GET    "/"          [] views/index)
   (GET    "/employees" [] views/show-all-employees)
-  (GET    "/employee/:id" [id] views/show-employee)
+  (GET    "/employees/:id" [id] views/show-employee)
   (POST   "/employees" [] views/create-employee)
   (DELETE "/employees" [] views/remove-employee)
   (route/resources "/" )

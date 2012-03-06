@@ -131,7 +131,13 @@ var Application = Backbone.Router.extend({
   show_employee: function(id) { 
     var app = $('#application').empty();
     reset_nav('', true);
-    console.log(id);
+
+    var employee = new Employee({id: id});
+    employee.fetch({
+      success: function () { 
+        console.log(employee.get('name'));
+      }
+    })   
   },
 
   index: function () { 
