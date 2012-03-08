@@ -22,7 +22,6 @@
   (json/read-json
    (:body (client/get (str harvest-url url) headers))))
 
-
 (defn who-am-i? []
   (make-harvest-api-call "account/who_am_i"))
 

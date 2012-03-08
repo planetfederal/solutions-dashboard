@@ -3,9 +3,9 @@
    [decline.core :only (validations validate-val)]
    [hiccup.page :only (html5 include-js include-css)])
   (:require
-   [solutions-dashboard.config :as config]
-   [solutions-dashboard.trello :as trello]
-   
+   [solutions-dashboard.config  :as config]
+   [solutions-dashboard.trello  :as trello]
+   [solutions-dashboard.harvest :as harvest]
    [hiccup.form        :as form]
    [clojure.data.json  :as json]
    [clojure.java.jdbc  :as sql]))
@@ -33,10 +33,12 @@
     [:meta {:http-equiv "content-type" :content "text/html; charset=utf-8"}]
     [:meta {:charset "utf-8"}]
     [:title (:title options "OpenGeo Dashboard")]
+
     (include-css "/bootstrap/css/bootstrap.min.css")
-    (include-js "/jquery-1.7.1.min.js")
-    (include-js "/underscore-min.js")
-    (include-js "/backbone.js")
+    (include-js  "/jquery-1.7.1.min.js")
+    (include-js  "/underscore-min.js")
+    (include-js  "/backbone.js")
+    (include-js  "/bootstrap-modal.js")
     (:header options)]
    [:body [:div.container (nav-bar request) body]]))
 
@@ -67,8 +69,9 @@
         {:header (list (include-js "/index.js"))}
         [:div
          [:ul#dash-nav.nav.nav-tabs
-          [:li#index.active [:a {:href ""} "Employee list"]]
+          [:li#index.active [:a {:href "#"} "Employee list"]]
           [:li#new [:a {:href "#new"} "Add an employee"]]
+          [:li#harvest [:a {:href "#harvest"} "View current Harvest projects"]]
           [:li#resocure [:a "Resources Dashboard"]]]
          [:div#application]]))
 
@@ -95,6 +98,8 @@
    (validate-val :name blank? {:name "The name must be a string"})
    (validate-val :trello_username blank?
                  {:trello_name "The trello account number must be a string"})
+   (validate-val :harvest_id blank?
+                    {:harvest_id "The trello account number must be a string"})
    (validate-val :email blank? {:email "The trello account number must be a string"})))
 
 
@@ -116,3 +121,16 @@
   (let [id (Integer/parseInt (:id (:params req)))]
     (sql/delete-rows :employees ["id=?" id])
     (json-response "okay")))
+
+(defn show-harvest-projects [req]
+  (json-response (harvest/make-harvest-api-call (str "/projects"))))
+
+
+(defn show-trello-info
+  "Pass the trello information to the client"
+  [req]
+  (json-response (trello/get-user-projects (:username (:params req)))))
+
+(defn show-harvest-info
+  [req]
+  (json-response (harvest/make-harvest-api-call (str "/people/" (:username (:params req))))))

@@ -13,10 +13,14 @@
 
 (defroutes main-routes
   (GET    "/"          [] views/index)
+
   (GET    "/employees" [] views/show-all-employees)
   (GET    "/employees/:id" [id] views/show-employee)
   (POST   "/employees" [] views/create-employee)
   (DELETE "/employees/:id" [] views/remove-employee)
+  (GET    "/get-trello-info/:username"  [] views/show-trello-info)
+  (GET    "/get-harvest-info/:username" [] views/show-harvest-info)
+  (GET    "/show-harvest-projects"  [] views/show-harvest-projects)
   (route/resources "/" )
   (route/not-found (views/page-not-found {})))
 
