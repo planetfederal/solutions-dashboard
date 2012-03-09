@@ -130,8 +130,8 @@ var show_harvest_projects = function (app, projects) {
   _.map(projects, function(p) { 
     var tr = $('<tr/>').appendTo(tbody);
     $('<td/>', {text: p.name}).appendTo(tr);
-    $('<td/>', {text: '----'}).appendTo(tr);
-    $('<td/>', {text: '----'}).appendTo(tr);
+    $('<td/>', {text: p.budget}).appendTo(tr);
+    $('<td/>', {text: p.hourly_rate}).appendTo(tr);
   });
 
 };
@@ -201,7 +201,16 @@ var ViewEmployee = Backbone.View.extend({
         wrap  = $('<div/>', {'class': 'well'}),
         tool_list = $('<div/>', {'class':'btn-group'}).appendTo(wrap),
         edit = $('<a/>', {text: 'Edit user', 'class': 'btn'}).appendTo(tool_list),
+        email = $('<a/>', {text: 'Send priority email', 'class': 'btn'}).appendTo(tool_list),
         remove = $('<a/>', {text: 'Remove user', 'class': 'btn btn-danger'}).appendTo(tool_list);
+
+    email.click(function () {
+      $.ajax({
+        url: '/employees/' + model.get('id') + '/send-email',
+        type: 'POST',
+        success: function () { alert('Your email has been sent'); } 
+      });
+    });
 
     remove.click(function () {
       var rm = confirm('Are you sure you want to remove this user?');

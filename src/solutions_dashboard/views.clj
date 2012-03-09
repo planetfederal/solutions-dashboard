@@ -1,11 +1,14 @@
 (ns solutions-dashboard.views
   (:use
    [decline.core :only (validations validate-val)]
+   [ring.util.response :only (redirect)]
    [solutions-dashboard.trello :only (get-user-projects)]
    [hiccup.page :only (html5 include-js include-css)])
   (:require
    [solutions-dashboard.config  :as config]
    [solutions-dashboard.harvest :as harvest]
+   [solutions-dashboard.auth    :as auth]
+   [solutions-dashboard.emails  :as emails]
    [hiccup.form        :as form]
    [clojure.data.json  :as json]
    [clojure.java.jdbc  :as sql]))
@@ -23,7 +26,8 @@
 (defn nav-bar [req]
   [:div.navbar [:div.navbar-inner
                 [:div.container [:h1.brand
-                                 [:a.brand {:href "/"} title-text]]]]])
+                                 [:a.brand {:href "/"} title-text]]
+                 [:a.pull-right {:href "/logout"} "Log out"]]]])
 
 (defn page
   "Base function to generate a basic page"
@@ -34,14 +38,33 @@
     [:meta {:charset "utf-8"}]
     [:title (:title options "OpenGeo Dashboard")]
 
-    (include-css "/bootstrap/css/bootstrap.min.css")
-    (include-js  "/jquery-1.7.1.min.js")
-    (include-js  "/underscore-min.js")
-    (include-js  "/backbone.js")
-    (include-js  "/bootstrap-modal.js")
+    (include-css "/public/bootstrap/css/bootstrap.min.css")
+    (include-js  "/public/jquery-1.7.1.min.js")
+    (include-js  "/public/underscore-min.js")
+    (include-js  "/public/backbone.js")
     (:header options)]
    [:body [:div.container (nav-bar request) body]]))
 
+
+(defn get-login [req]
+  (page req {}
+        [:div (form/form-to
+               [:POST "/login"]
+               (form/text-field :username)
+               (form/password-field :password)
+               [:input.btn {:type "submit" :value "Log in"}])]))
+
+(defn post-login [req]
+  (let [form (:form-params req)
+        user (get form "username")
+        passwd (get form "password")]
+    (if (and (= user (first config/auth)) (= passwd (second config/auth)))
+      (do (auth/session-save-user req user) (redirect "/"))
+      (redirect "/login"))))
+
+(defn logout [req]
+  (auth/session-delete req)
+  (redirect "/login"))
 
 (defn page-not-found [req]
   (page req {} [:div.well [:h3 "We where unable to find the page you where looking."]]))
@@ -66,7 +89,7 @@
   "Main page, loads all of the javascript for the page"
   [req]
   (page req
-        {:header (list (include-js "/index.js"))}
+        {:header (list (include-js "/public/index.js"))}
         [:div
          [:ul#dash-nav.nav.nav-tabs
           [:li#index.active [:a {:href "#"} "Employee list"]]
@@ -137,3 +160,9 @@
 (defn show-harvest-projects
   [req]
   (json-response (harvest/get-all-projects)))
+
+
+(defn view-send-email [req]
+  (let [e (get-employee (Integer/parseInt (:id (:params req))))]
+    (emails/send-message e)
+    (json-response "okay")))
