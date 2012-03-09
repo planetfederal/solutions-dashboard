@@ -50,7 +50,6 @@
   In the solutions dashboard boards are projects and
   cards are task."
   [person]
-  (println (str "Fetching the user information from Trello" (Date.)))
   (let [user-info (make-trello-api-call
                    :get
                    (str "members/" person)

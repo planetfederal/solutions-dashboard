@@ -4,6 +4,7 @@
    [solutions-dashboard.trello :as trello]
    [solutions-dashboard.views :as views]
    [solutions-dashboard.config :as config]
+   [solutions-dashboard.emails :as emails]
    [postal.core :as postal])
   (:import
    [java.util Date]
@@ -15,39 +16,12 @@
    [org.quartz.impl StdSchedulerFactory]))
 
 
-(defn send-email [user password to body]
-  (println (str "sending the email to google" (Date.)))
-  (postal/send-message
-   #^{:host "smtp.gmail.com"
-      :user user
-      :pass password
-      :ssl :yes!!!11}
-   {:from "iwillig@gmail.com"
-    :to [to]
-    :subject (str "Priorities for " (Date.))
-    :body [{:type "text/html"
-             :content body}]}))
-
-(defn send-employee-priorities
-  "Formats and sends a priority email to an employee"
-  [e]
-  (let [[user password] config/mail-config]
-    (send-email user password (:email e)
-                     (hiccup.core/html (trello/display-user-priorities e)))))
-
-(defn send-priorities!
-  "Function to send all of the priorities to each employee"
-  []
-  (sql/with-connection config/db
-    (sql/with-query-results employees ["select * from employees"]
-      (doseq [employee employees]
-        (send-employee-priorities employee)))))
 
 (deftype Task []
   org.quartz.Job
   (execute [this context]
     (println "Starting priorities")
-    (send-priorities!)))
+    (emails/send-emails-to-all)))
 
 (defn make-job-details
   "Function to make building the job details less of a pain"
