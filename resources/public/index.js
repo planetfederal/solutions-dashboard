@@ -146,34 +146,50 @@ var AddEmployee = Backbone.View.extend({
 
 /* */
 var show_trello  = function (app, trello_info) {
+  var title = $('<h3/>', {text: 'Trello information'}).appendTo(app),
+      table = build_table({
+        id: 'trello_table',
+        'classes': ['table','table-bordered'],
+        headers: ['Project', 'Tasks']
+      });
+  table.appendTo(app);
 
-  var well = $('<div/>', {}).appendTo(app),
-      ul = $('<ul/>');
+  _.map(trello_info.projects, function (p) { 
+    var tr = $('<tr/>'),
+        name = $('<td/>',{text: p.name}).appendTo(tr),
+        tasks = $('<td/>').appendTo(tr);      
+    tr.appendTo(table);
 
-  _.map(trello_info.projects, function(project) { 
-    var li = $('<li>').appendTo(ul);
+    _.map(p.tasks, function (t) {
+      var ol = $('<ol/>'),
+          task_name = $('<p/>', {text: t.name}).appendTo(ol);
+      ol.appendTo(tasks);
 
-    $('<p/>', {text:project.name}).appendTo(li);
-
-    var tasks = $('<ul/>').appendTo(li);
-
-    _.map(project.tasks, function(task) { 
-      var task_li = $('<li/>').appendTo(tasks);
-      $('<p/>', {text: task.name}).appendTo(task_li);
-      $('<p/>', {text: task.due}).appendTo(task_li);
     });
 
+  });  
 
+};
+/* */
+var show_harvest = function (app, harvest) { 
+  var title = $('<h3/>', {text: 'Harvest information'}).appendTo(app),
+      table = build_table({
+        id: 'harvest_table',
+        'classes': ['table', 'table-bordered'],
+        headers: ['Task name','Task created at','Task hours']
+      });
+  table.appendTo(app);
+
+  _.map(harvest, function (h) { 
+    var tr = $('<tr/>'),
+        name = $('<td/>', {text: h.notes}).appendTo(tr),
+        create_at = $('<td/>', {text: h.created_at}).appendTo(tr),
+        hours = $('<td/>', {text: h.hours}).appendTo(tr); 
+
+    tr.appendTo(table);
   });
 
-  ul.appendTo(well);
-  
-
-}
-var show_harvest = function (app, harvest) { 
-  console.log(app);
-  console.log(harvest);
-}
+};
 
 
 /* */
@@ -359,5 +375,5 @@ var Application = Backbone.Router.extend({
 /* main function to render the home page */
 $(function () {
   new Application();
-  Backbone.history.start();  
+  Backbone.history.start();
 });
