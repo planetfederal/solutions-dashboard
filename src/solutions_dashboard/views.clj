@@ -1,10 +1,10 @@
 (ns solutions-dashboard.views
   (:use
    [decline.core :only (validations validate-val)]
+   [solutions-dashboard.trello :only (get-user-projects)]
    [hiccup.page :only (html5 include-js include-css)])
   (:require
    [solutions-dashboard.config  :as config]
-   [solutions-dashboard.trello  :as trello]
    [solutions-dashboard.harvest :as harvest]
    [hiccup.form        :as form]
    [clojure.data.json  :as json]
@@ -122,15 +122,17 @@
     (sql/delete-rows :employees ["id=?" id])
     (json-response "okay")))
 
-(defn show-harvest-projects [req]
-  (json-response (harvest/make-harvest-api-call (str "/projects"))))
-
 
 (defn show-trello-info
   "Pass the trello information to the client"
   [req]
-  (json-response (trello/get-user-projects (:username (:params req)))))
+  (json-response (get-user-projects (:username (:params req)))))
 
-(defn show-harvest-info
+(defn show-harvest-info [req]
+  (let [employee (get-employee (Integer/parseInt (:id (:params req))))
+        week (harvest/one-week)]
+    (json-response (harvest/get-time-entries-by-person employee (first week) (second week)))))
+
+(defn show-harvest-projects
   [req]
-  (json-response (harvest/make-harvest-api-call (str "/people/" (:username (:params req))))))
+  (json-response (harvest/get-all-projects)))

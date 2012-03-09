@@ -1,5 +1,7 @@
 (ns solutions-dashboard.harvest
-  (:import [org.apache.commons.codec.binary Base64])
+  (:import
+   [java.util Calendar]
+   [org.apache.commons.codec.binary Base64])
   (:require
    [solutions-dashboard.config :as config]
    [clojure.java.jdbc  :as sql]
@@ -12,51 +14,78 @@
 (defn base-64 [credentials]
   (.trim (Base64/encodeBase64String (.getBytes (string/join ":" credentials)))))
 
-(def headers
-  {:basic-auth config/harvest-auth
-   :authorization (str "Basic " (base-64 config/harvest-auth))
-   :accept :json
-   :content-type :json})
 
-(defn make-harvest-api-call [url]
-  (json/read-json
-   (:body (client/get (str harvest-url url) headers))))
+(defn make-harvest-api-call [url  query-params] 
+  (json/read-json (:body (client/get
+                          (str harvest-url url)
+                          {:basic-auth config/harvest-auth
+                           :authorization (str "Basic " (base-64 config/harvest-auth))
+                           :query-params query-params
+                           :accept :json
+                           :content-type :json}))))
+
+
+
+(defn time-difference [diff]
+  (let [now (Calendar/getInstance)
+        past (.clone now)]
+    (.add past (Calendar/DATE) diff)
+    (list past now)))
+
+(defn one-week []
+  (map #(vector
+         (.get % (Calendar/YEAR))
+         (.get % (Calendar/MONTH))
+         (.get % (Calendar/DAY_OF_MONTH))) (time-difference -7)))
 
 (defn who-am-i? []
-  (make-harvest-api-call "account/who_am_i"))
+  (make-harvest-api-call "account/who_am_i" {}))
+
 
 (defn get-person-by-id [id]
-  (make-harvest-api-call (str "people/" id)))
+  (make-harvest-api-call (str "people/" id) {}))
 
-(defn get-all-employees []
-  (for [people (make-harvest-api-call "people/")]
-    (let [e (:user people)]
-      {:id (:id e)
-       :first_name (:first_name e)
-       :last_name (:last_name e)
-       :email (:email e)
-       :is_active (:is_active e)})))
+(defn get-task [id]
+  (:task (make-harvest-api-call (str "/tasks/" id) {})))
 
+(def project-url (partial str "projects/"))
 
 (defn get-all-projects []
-  (for [project (make-harvest-api-call "projects/")]
-    (let [p (:project project)]
-      {:id (:id p)
-       :client_id ()
-       :name (:name p)
-       :notes (:notes p)
-       :active (:active p)
-       :bill_by (:bill_by p)
-       :budget (:budget p) })))
+  (map :project (make-harvest-api-call (project-url) {})))
 
 
-(defn ingest-harvest-employee-data []
-  (sql/with-connection config/db
-    (doseq [e (get-all-employees)]
-      (sql/insert-record :employess e))))
+(defn get-project-by-name [name]
+  (first (filter #(= (:name %) name) (get-all-projects))))
 
-(defn ingest-harvest-data []
-  (ingest-harvest-employee-data))
+(defn get-task-assignments [project]
+  (map :task_assignment
+       (make-harvest-api-call (project-url (:id project) "/task_assignments") {})))
 
-(def geonode-id 1566614)
-(def rollie 176897)
+
+(defn get-user-assignments [project]
+  (make-harvest-api-call (project-url  (:id project) "/user_assignments") {}))
+
+(defn format-number [x]
+  (if (> 10 x)
+    (str "0" x)
+    (str x)))
+
+(defn format-date [date]
+  (apply str (map format-number date)))
+
+
+(defn get-time-entries [url resource from to]
+  (make-harvest-api-call
+   (str url (:harvest_id resource) "/entries")
+   {:from (format-date from) :to (format-date to)}))
+
+(defn get-time-entries-by-project [project from to]
+  (map :day_entry (get-time-entries "projects/" project from to)))
+
+(defn get-time-entries-by-person [person from to]
+  (map :day_entry (get-time-entries "people/" person from to)))
+
+(defn main []
+  (let [week (one-week)
+        entries (get-time-entries-by-person {:harvest_id 295657}  [2012 1 1] [2012 3 1])]
+    entries))
