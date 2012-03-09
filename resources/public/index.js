@@ -8,9 +8,9 @@
 /* function to show an error to an end user */
 var show_error = function (e) {
   var error_div = $('<div>', {'class': 'alert'}),
+      width = 400,
       error_msg = $('<p/>',  {text: e.responseText});
 
-  var width = 400;
   error_div.css('width', width)
     .css('height', 300)
     .css('margin', 'auto')
@@ -48,18 +48,17 @@ var populate_form = function (options) {
 /* function to make building a table a little nicer */
 var build_table = function(options) {
 
-  var klasses = options.klasses.join(' ');
-  var id = options.id;
-  var headers = options.headers;
-
-  var _table = $('<table/>', {id: id, 'class': klasses});
-  var _thead = $('<thead/>').appendTo(_table);
-  var _tr    = $('<tr/>').appendTo(_thead);
-  var _tbody = $('<tbody/>').appendTo(_table);
+  var classes = options.classes.join(' '),
+      id = options.id,
+      headers = options.headers,
+      _table = $('<table/>', {id: id, 'class': classes}),
+      _thead = $('<thead/>').appendTo(_table),
+      _tr    = $('<tr/>').appendTo(_thead),
+      _tbody = $('<tbody/>').appendTo(_table);
 
   _.each(headers, function (h) {
     
-    $('<th/>',{text: h.text}).appendTo(_tr);
+    $('<th/>',{text: h}).appendTo(_tr);
 
   });
   return _table;
@@ -92,10 +91,10 @@ var Index = Backbone.View.extend({
     el.empty();
     var table = build_table({
       id: 'employee-table',
-      klasses: ['table', 'table-bordered'],
-      headers: [{text: 'Employee name'}, 
-                {text: 'Employee email'},
-                {text: 'Employee trello name'}]
+      classes: ['table', 'table-bordered'],
+      headers: ['Employee name', 
+                'Employee email',
+                'Employee trello name']
     });
 
     table.appendTo(el);
@@ -116,18 +115,24 @@ var Index = Backbone.View.extend({
 
 });
 
-var show_harvest_projects = function (app, raw) {
-  var projects = _.pluck(raw, 'project'),
-      table    = $('<table/>'),
-      thead    = $('<thead/>').appendTo(table),
-      tr       = $('<tr/>').appendTo(thead),
-      headers = _.first(projects);
+var show_harvest_projects = function (app, projects) {
   
-  for (var header in headers) { 
-    $('<th/>',{text: header}).appendTo(tr);
-  };
-    
+  var table = build_table({
+    id: 'harvest-table',
+    classes: ['table', 'table-bordered'],
+    headers: ['Name','Budget','Hourly rate']
+  });
+
   table.appendTo(app);
+
+  var tbody = $('<tbody/>').appendTo(table);
+
+  _.map(projects, function(p) { 
+    var tr = $('<tr/>').appendTo(tbody);
+    $('<td/>', {text: p.name}).appendTo(tr);
+    $('<td/>', {text: '----'}).appendTo(tr);
+    $('<td/>', {text: '----'}).appendTo(tr);
+  });
 
 };
 
@@ -142,26 +147,20 @@ var AddEmployee = Backbone.View.extend({
 /* */
 var show_trello  = function (app, trello_info) {
 
-  var well = $('<div/>', {'class': 'well'}).appendTo(app);
+  var well = $('<div/>', {}).appendTo(app),
+      ul = $('<ul/>');
 
-  var title = $('<h3/>',{text: 'Trello projects associated with user'}).appendTo(well);
-  var ul = $('<ul/>')
-
-  var projects = trello_info.projects;
-
-  _.map(projects, function(project) { 
+  _.map(trello_info.projects, function(project) { 
     var li = $('<li>').appendTo(ul);
+
     $('<p/>', {text:project.name}).appendTo(li);
 
     var tasks = $('<ul/>').appendTo(li);
 
     _.map(project.tasks, function(task) { 
-
       var task_li = $('<li/>').appendTo(tasks);
-
       $('<p/>', {text: task.name}).appendTo(task_li);
       $('<p/>', {text: task.due}).appendTo(task_li);
-
     });
 
 
@@ -171,7 +170,7 @@ var show_trello  = function (app, trello_info) {
   
 
 }
-var show_harvest = function (app, harvest_info) { 
+var show_harvest = function (app, harvest) { 
 
 }
 
@@ -180,16 +179,13 @@ var show_harvest = function (app, harvest_info) {
 var ViewEmployee = Backbone.View.extend({
 
   render: function (app)  { 
-    var model = this.model;
-    var wrap  = $('<div/>', {'class': 'well'});
 
-    var tool_list = $('<div/>', {'class':'btn-group'}).appendTo(wrap);
+    var model = this.model,
+        wrap  = $('<div/>', {'class': 'well'}),
+        tool_list = $('<div/>', {'class':'btn-group'}).appendTo(wrap),
+        edit = $('<a/>', {text: 'Edit user', 'class': 'btn'}).appendTo(tool_list),
+        remove = $('<a/>', {text: 'Remove user', 'class': 'btn btn-danger'}).appendTo(tool_list);
 
-
-    var edit = $('<a/>', {text: 'Edit user',
-                          'class': 'btn'}).appendTo(tool_list);
-    var remove = $('<a/>', {text: 'Remove user', 
-                            'class': 'btn btn-danger'}).appendTo(tool_list);
     remove.click(function () {
       var rm = confirm('Are you sure you want to remove this user?');
       if (rm) { 
@@ -226,14 +222,6 @@ var ViewEmployee = Backbone.View.extend({
       error:   function (e) {show_error(e)}
     });
 
-    $.ajax({
-      url: '/get-harvest-info/' + this.model.get('harvest_id'),
-      success: function (harvest_info) { 
-        show_harvest(app, harvest_info);
-      },
-      error: function (e) {show_error(e);}
-    });
-
     return this;
   }
 
@@ -262,6 +250,7 @@ var Application = Backbone.Router.extend({
     reset_nav('#harvest');
 
     $.ajax({
+      async: false,
       url: '/show-harvest-projects',
       success: function (projects) {
         show_harvest_projects(app, projects);
