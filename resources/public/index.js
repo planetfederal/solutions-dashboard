@@ -171,7 +171,8 @@ var show_trello  = function (app, trello_info) {
 
 }
 var show_harvest = function (app, harvest) { 
-
+  console.log(app);
+  console.log(harvest);
 }
 
 
@@ -194,7 +195,7 @@ var ViewEmployee = Backbone.View.extend({
             window.location = '/';
           },
           error: function (m, e) { 
-            alert(e);
+            show_error(e);
           }
         });
       };
@@ -204,22 +205,28 @@ var ViewEmployee = Backbone.View.extend({
 
     var attrs = this.model.attributes;
     for (var key in attrs) { 
-
-      var row = $('<div/>', {'class': 'row'})
-      var column_name  = $('<p/>', {'class': 'span3',text: key}).appendTo(row);
-      var column_value = $('<p/>', {'class': 'span3', text: attrs[key]}).appendTo(row);
-      row.appendTo(wrap);
-      
-    }
+      var row = $('<div/>', {'class': 'row'});
+      $('<p/>', {'class': 'span3',text: key}).appendTo(row);
+      $('<p/>', {'class': 'span3', text: attrs[key]}).appendTo(row);
+      row.appendTo(wrap);      
+    };
 
     wrap.appendTo(app);
 
     $.ajax({
-      url: '/get-trello-info/' + this.model.get('trello_username'),
+      url: '/employees/' + this.model.get('id') + '/get-trello-info',
       success: function (trello_info) {
         show_trello(app, trello_info);
       },
-      error:   function (e) {show_error(e)}
+      error: function (e) {show_error(e)}
+    });
+
+    $ .ajax({
+      url: '/employees/' + this.model.get('id') + '/get-harvest-info',
+      success: function (harvest) { 
+        show_harvest(app, harvest);
+      },
+      error:   function (e) {show_error(e);}
     });
 
     return this;

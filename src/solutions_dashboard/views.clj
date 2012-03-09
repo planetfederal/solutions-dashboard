@@ -126,7 +126,8 @@
 (defn show-trello-info
   "Pass the trello information to the client"
   [req]
-  (json-response (get-user-projects (:username (:params req)))))
+  (let [employee (get-employee (Integer/parseInt (:id (:params req))))]
+    (json-response (get-user-projects (:trello_username employee)))))
 
 (defn show-harvest-info [req]
   (let [employee (get-employee (Integer/parseInt (:id (:params req))))
