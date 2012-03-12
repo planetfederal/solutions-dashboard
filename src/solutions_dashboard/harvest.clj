@@ -1,6 +1,6 @@
 (ns solutions-dashboard.harvest
   (:import
-   [java.util Calendar]
+   [java.util Calendar GregorianCalendar]
    [org.apache.commons.codec.binary Base64])
   (:require
    [solutions-dashboard.config :as config]
@@ -27,7 +27,7 @@
 
 
 (defn time-difference [diff]
-  (let [now (Calendar/getInstance)
+  (let [now (GregorianCalendar/getInstance)
         past (.clone now)]
     (.add past (Calendar/DATE) diff)
     (list past now)))
@@ -35,7 +35,7 @@
 (defn one-week []
   (map #(vector
          (.get % (Calendar/YEAR))
-         (.get % (Calendar/MONTH))
+         (+ (.get % (Calendar/MONTH)) 1)
          (.get % (Calendar/DAY_OF_MONTH))) (time-difference -7)))
 
 (defn who-am-i? []
