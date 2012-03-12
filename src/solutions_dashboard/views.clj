@@ -19,41 +19,6 @@
 (extend java.sql.Timestamp json/Write-JSON
         {:write-json write-json-timestamp})
 
-(def title-text "OpenGeo Solutions Dashboard")
-(def about-text "Welcome to the OpenGeo Dashboard, from here you should be
-   able to get an overview of all of the ongoing projects")
-
-(defn nav-bar [req]
-  [:div.navbar [:div.navbar-inner
-                [:div.container [:h1.brand
-                                 [:a.brand {:href "/"} title-text]]
-                 [:a.pull-right {:href "/logout"} "Log out"]]]])
-
-(defn page
-  "Base function to generate a basic page"
-  [request options body]
-  (html5
-   [:head
-    [:meta {:http-equiv "content-type" :content "text/html; charset=utf-8"}]
-    [:meta {:charset "utf-8"}]
-    [:title (:title options "OpenGeo Dashboard")]
-
-    (include-css "/public/bootstrap/css/bootstrap.min.css")
-    (include-js  "/public/jquery-1.7.1.min.js")
-    (include-js  "/public/underscore-min.js")
-    (include-js  "/public/backbone.js")
-    (:header options)]
-   [:body [:div.container (nav-bar request) body]]))
-
-
-(defn get-login [req]
-  (page req {}
-        [:div (form/form-to
-               [:POST "/login"]
-               (form/text-field :username)
-               (form/password-field :password)
-               [:input.btn {:type "submit" :value "Log in"}])]))
-
 (defn post-login [req]
   (let [form (:form-params req)
         user (get form "username")
@@ -66,15 +31,15 @@
   (auth/session-delete req)
   (redirect "/login"))
 
-(defn page-not-found [req]
-  (page req {} [:div.well [:h3 "We where unable to find the page you where looking."]]))
-
 (defn json-response
   "Function to correctly format the json response for the api"
   [data & [status]]
   {:status (or status 200)
    :headers {"Content-Type" "application/json"}
    :body (json/json-str data)})
+
+(defn page-not-found [req]
+  (json-response "We where unable to find the page you where looking."))
 
 
 (defn get-all-employees []
@@ -85,18 +50,6 @@
   (sql/with-query-results rs ["select * from employees where id = ?" id]
     (first rs)))
 
-(defn index
-  "Main page, loads all of the javascript for the page"
-  [req]
-  (page req
-        {:header (list (include-js "/public/index.js"))}
-        [:div
-         [:ul#dash-nav.nav.nav-tabs
-          [:li#index.active [:a {:href "#"} "Employee list"]]
-          [:li#new [:a {:href "#new"} "Add an employee"]]
-          [:li#harvest [:a {:href "#harvest"} "View current Harvest projects"]]
-          [:li#resocure [:a "Resources Dashboard"]]]
-         [:div#application]]))
 
 (defn show-all-employees
   "View to show all of the currently configured employees

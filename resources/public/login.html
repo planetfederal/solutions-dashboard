@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta content="text/html; charset=utf-8" http-equiv="content-type">
+    <meta charset="utf-8">
+    <title>OpenGeo Solutions Dashboard</title>
+
+    <link rel="stylesheet" 
+          href="/public/bootstrap/css/bootstrap.min.css"
+          type="text/css" 
+          media="screen" />
+
+    <script type="text/javascript" src="/public/jquery-1.7.1.min.js">
+    </script>
+
+    <script type="text/javascript" src="/public/underscore-min.js">
+    </script>
+
+    <script type="text/javascript" src="/public/backbone.js">
+    </script>
+    
+    <script type="text/javascript" src="/public/index.js">
+    </script>
+  </head>
+
+  <body>    
+
+    <div class="container">
+      <div class="navbar"> 
+        <div class="navbar-inner">
+          <div class="container">
+            <h1><a class="brand" href="/">OpenGeo solutions dashboard</a></h1>
+          </div>
+        </div>
+      </div>
+
+      <form method="POST" action="/login">
+        <label>Username</label>
+        <input type="text" name="username" value="" />
+
+        <label>Password</label>
+        <input type="password" name="password" value="" />
+        <br />
+        <input class="btn" type="submit" name="" value="Log in" />
+
+      </form>
+    </div>
+  </body>
+
+</html>

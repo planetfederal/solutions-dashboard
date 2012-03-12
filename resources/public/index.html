@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta content="text/html; charset=utf-8" http-equiv="content-type">
+    <meta charset="utf-8">
+    <title>OpenGeo Solutions Dashboard</title>
+
+    <link rel="stylesheet" 
+          href="/public/bootstrap/css/bootstrap.min.css"
+          type="text/css" 
+          media="screen" />
+
+    <script type="text/javascript" src="/public/jquery-1.7.1.min.js">
+    </script>
+
+    <script type="text/javascript" src="/public/underscore-min.js">
+    </script>
+
+    <script type="text/javascript" src="/public/backbone.js">
+    </script>
+    
+    <script type="text/javascript" src="/public/index.js">
+    </script>
+  </head>
+
+  <body>    
+
+    <div class="container">
+      <div class="navbar"> 
+        <div class="navbar-inner">
+          <div class="container">
+            <h1><a class="brand" href="/">OpenGeo solutions dashboard</a></h1>
+          </div>
+          <a class="pull-right" href="/logout">Log out</a>
+        </div>
+      </div>
+
+      <ul id="dash-nav" class="nav nav-tabs">
+        <li id="index"> <a href="#">Employee list </a></li>
+        <li id="new"> <a href="#new">Add an employee </a></li>
+        <li id="harvest"> <a href="#harvest">View current harvest projects</a></li>
+      </ul>
+      <div id="application">
+        
+      </div>
+    </div>
+  </body>
+
+</html>

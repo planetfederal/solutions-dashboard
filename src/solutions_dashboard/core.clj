@@ -8,14 +8,15 @@
    [solutions-dashboard.views  :as views]
    [solutions-dashboard.config :as config]
    [solutions-dashboard.auth   :as auth]
+   [clojure.java.io    :as io]
    [compojure.handler  :as handler]
    [compojure.response :as response]
    [compojure.route    :as route]
    [clojure.java.jdbc  :as sql]))
 
 (defroutes main-routes
-  (GET    "/"          [] views/index)
-  (GET    "/login"     [] views/get-login)
+  (GET    "/"          [] (io/resource "public/index.html"))
+  (GET    "/login"     [] (io/resource "public/login.html"))
   (POST   "/login"     [] views/post-login)
   (GET    "/logout"    [] views/logout)
   (GET    "/employees" [] views/show-all-employees)

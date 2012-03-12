@@ -1,5 +1,5 @@
 (defproject solutions-dashboard "1.0.0-SNAPSHOT"
-  :description "FIXME: write description"  
+  :description "OpenGeo solutions dashboard"
   :dependencies [[org.clojure/clojure "1.3.0"]
                  [hiccup "1.0.0-beta1"]
                  [clj-http "0.3.2"]
