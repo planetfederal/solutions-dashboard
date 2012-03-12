@@ -41,6 +41,11 @@
 (defn who-am-i? []
   (make-harvest-api-call "account/who_am_i" {}))
 
+(defn limit? []
+  (make-harvest-api-call "account/rate_limit_status" {}))
+
+(defn get-people []
+  (map :user (make-harvest-api-call "people/" {})))
 
 (defn get-person-by-id [id]
   (make-harvest-api-call (str "people/" id) {}))
@@ -50,12 +55,20 @@
 
 (def project-url (partial str "projects/"))
 
-(defn get-all-projects []
+(defn get-projects []
   (map :project (make-harvest-api-call (project-url) {})))
 
+(defn get-project [id]
+  (make-harvest-api-call (project-url "/" id) {}))
+
+(defn get-tasks []
+  (map :task (make-harvest-api-call "tasks" {})))
+
+(defn get-task [id]
+  (make-harvest-api-call (str "tasks/" id) {}))
 
 (defn get-project-by-name [name]
-  (first (filter #(= (:name %) name) (get-all-projects))))
+  (first (filter #(= (:name %) name) (get-projects))))
 
 (defn get-task-assignments [project]
   (map :task_assignment
@@ -85,7 +98,22 @@
 (defn get-time-entries-by-person [person from to]
   (map :day_entry (get-time-entries "people/" person from to)))
 
+(defn tasks-from-task-assignments [project]
+  (map #(merge % (get-task (:task_id % ))) (get-task-assignments {:id project})))
+
+(defn get-entries-tasks-and-projects [entries]
+  (map #(assoc (:task (get-task (key %))) :project_id (:project_id (first (val %)))) entries))
+
+(defn get-user-tasks [user from to]
+  (let [entries (get-time-entries-by-person user from to)
+        entries_tasks (group-by :task_id entries)
+        tasks (map
+               #(assoc % :entries (get entries_tasks (:id %)))
+               (get-entries-tasks-and-projects entries_tasks))]
+    (map #(assoc (:project (get-project (key %))) :tasks (val %)) (group-by :project_id tasks))
+    ))
+
 (defn main []
   (let [week (one-week)
-        entries (get-time-entries-by-person {:harvest_id 295657}  [2012 1 1] [2012 3 1])]
+        entries (get-user-tasks {:harvest_id 295657}  [2012 3 5] [2012 3 12])]
     entries))

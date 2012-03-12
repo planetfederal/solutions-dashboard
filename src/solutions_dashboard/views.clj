@@ -108,7 +108,7 @@
 (defn show-harvest-info [req]
   (let [employee (get-employee (Integer/parseInt (:id (:params req))))
         week (harvest/one-week)]
-    (json-response (harvest/get-time-entries-by-person employee (first week) (second week)))))
+    (json-response (harvest/get-user-tasks employee (first week) (second week)))))
 
 (defn show-harvest-projects
   [req]

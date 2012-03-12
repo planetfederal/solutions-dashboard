@@ -59,22 +59,3 @@
                     (for [project (:boards user-info)]
                       (assoc project  :tasks (get grouped-tasks (:id project)))))
              :boards :cards)))
-
-
-(defn display-user-priorities
-  "Function to handle displaying the employee's info"
-  [employee]
-  (let [employee-info (get-user-projects (:trello_username employee))]
-    [:div [:h3 (str "Employee: "(:name employee))]
-     [:table.table.table-bordered
-      [:thead [:tr [:th "Projects"] [:th "Tasks"]]]
-      [:tbody
-       (for [project (:projects employee-info)]
-         [:tr
-          [:td (:name project)]
-          [:td
-           [:table
-            (for [task (:tasks project)]
-              [:tr
-               [:td [:a {:href (:url task)}  (:name task)]]
-               [:td (or (:due task) "None")]])]]])]]]))

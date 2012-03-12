@@ -170,23 +170,48 @@ var show_trello  = function (app, trello_info) {
   });  
 
 };
+
 /* */
-var show_harvest = function (app, harvest) { 
+var show_harvest = function (app, projects) { 
+
   var title = $('<h3/>', {text: 'Harvest information'}).appendTo(app),
       table = build_table({
         id: 'harvest_table',
         'classes': ['table', 'table-bordered'],
-        headers: ['Task name','Task created at','Task hours']
+        headers: ['Project name','Tasks']
       });
   table.appendTo(app);
+  
+  var round = function (n) { 
+    return Math.round(n * 100)/100;
+  };
 
-  _.map(harvest, function (h) { 
-    var tr = $('<tr/>'),
-        name = $('<td/>', {text: h.notes}).appendTo(tr),
-        create_at = $('<td/>', {text: h.created_at}).appendTo(tr),
-        hours = $('<td/>', {text: h.hours}).appendTo(tr); 
+  var sum_hours = function (t) { 
+    return _.reduce(_.pluck(t.entries, 'hours'), function(res, n) { return res + +n; }, 0);
+  };
+
+  _.map(projects, function (p) {
+
+    var tr = $('<tr/>');
+    $('<td/>', {text: p.name}).appendTo(tr);
+    var tasks = $('<td/>').appendTo(tr);
+
+    var task_table = build_table({
+      id: 'task-table',
+      'classes': ['table'],
+      headers: ['Task name', 'Task Hours']
+    }).appendTo(tasks)
+    
+    _.map(p.tasks, function(t) { 
+      var ttr = $('<tr/>');
+      $('<td/>', {text: t.name}).appendTo(ttr);
+      $('<td/>', {text: round(sum_hours(t))}).appendTo(ttr);
+      ttr.appendTo(task_table);
+      
+    });
 
     tr.appendTo(table);
+
   });
 
 };
