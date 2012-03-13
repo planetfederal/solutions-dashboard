@@ -7,21 +7,22 @@
 
 /* function to show an error to an end user */
 var show_error = function (e) {
-  var error_div = $('<div>', {'class': 'alert'}),
-      width = 400,
-      error_msg = $('<p/>',  {text: e.responseText});
 
-  error_div.css('width', width)
-    .css('height', 300)
-    .css('margin', 'auto')
+  // var error_div = $('<div>', {'class': 'alert'}),
+  //     width = 400,
+  //     error_msg = $('<p/>',  {text: e.responseText});
+
+  // error_div.css('width', width)
+  //   .css('height', 300)
+  //   .css('margin', 'auto')
 
 
-  var close = $('<a/>', {'class': 'close', 'data-dismiss': 'alert', text: 'X'}).appendTo(error_div);
-  close.click(function () { error_div.remove() }); 
+  // var close = $('<a/>', {'class': 'close', 'data-dismiss': 'alert', text: 'X'}).appendTo(error_div);
+  // close.click(function () { error_div.remove() }); 
 
-  $('<h3/>',{'class': 'alert-heading',text: 'Something went wrong.'}).appendTo(error_div);
-  error_msg.appendTo(error_div);
-  error_div.appendTo($('body'));
+  // $('<h3/>',{'class': 'alert-heading',text: 'Something went wrong.'}).appendTo(error_div);
+  // error_msg.appendTo(error_div);
+  // error_div.appendTo($('body'));
 
  };
 

@@ -1,6 +1,5 @@
 (ns solutions-dashboard.auth)
 
-
 (defn session-get-user [request]
   (.getAttribute (:ses request) "user"))
 

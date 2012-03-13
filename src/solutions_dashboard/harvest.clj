@@ -4,6 +4,8 @@
    [org.apache.commons.codec.binary Base64])
   (:require
    [solutions-dashboard.config :as config]
+   [clojure.data.csv   :as csv]
+   [clojure.java.io    :as io]
    [clojure.java.jdbc  :as sql]
    [clojure.data.json  :as json]
    [clojure.string     :as string]
@@ -110,10 +112,15 @@
         tasks (map
                #(assoc % :entries (get entries_tasks (:id %)))
                (get-entries-tasks-and-projects entries_tasks))]
-    (map #(assoc (:project (get-project (key %))) :tasks (val %)) (group-by :project_id tasks))
-    ))
+    (map #(assoc (:project (get-project (key %))) :tasks (val %)) (group-by :project_id tasks))))
 
-(defn main []
-  (let [week (one-week)
-        entries (get-user-tasks {:harvest_id 295657}  [2012 3 5] [2012 3 12])]
-    entries))
+
+(defn export-harvest-users []
+  (sql/with-connection config/db     
+    (doseq  [p (get-people)]
+      (sql/insert-record :employees
+                         {:name (str (:first_name p) " " (:last_name p))
+                          :trello_username ""
+                          :harvest_id  (:id p)
+                          :email (:email p)
+                          }))))

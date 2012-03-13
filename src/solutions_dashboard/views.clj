@@ -2,14 +2,12 @@
   (:use
    [decline.core :only (validations validate-val)]
    [ring.util.response :only (redirect)]
-   [solutions-dashboard.trello :only (get-user-projects)]
-   [hiccup.page :only (html5 include-js include-css)])
+   [solutions-dashboard.trello :only (get-user-projects)])
   (:require
    [solutions-dashboard.config  :as config]
    [solutions-dashboard.harvest :as harvest]
    [solutions-dashboard.auth    :as auth]
    [solutions-dashboard.emails  :as emails]
-   [hiccup.form        :as form]
    [clojure.data.json  :as json]
    [clojure.java.jdbc  :as sql]))
 
@@ -112,7 +110,7 @@
 
 (defn show-harvest-projects
   [req]
-  (json-response (harvest/get-all-projects)))
+  (json-response (harvest/get-projects)))
 
 
 (defn view-send-email [req]
