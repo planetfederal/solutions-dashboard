@@ -3,7 +3,7 @@
    [ring.adapter.jetty-servlet :only (run-jetty)]
    [ring.util.response :only (redirect)]
    [ring.middleware.json-params :only (wrap-json-params)]
-   [compojure.core :only (defroutes context GET ANY POST DELETE)])
+   [compojure.core :only (defroutes context GET ANY POST DELETE PUT)])
   (:require
    [solutions-dashboard.views  :as views]
    [solutions-dashboard.config :as config]
@@ -25,6 +25,7 @@
   
   (context "/employees/:id" [id]
      (GET    "/" [id] views/show-employee)
+     (PUT   "/"  [id] views/update-employee)
      (POST   "/send-email" [] views/view-send-email)
      (DELETE "/" [id] views/remove-employee)
      (GET    "/get-trello-info"  [id] views/show-trello-info)

@@ -1,7 +1,7 @@
 (ns solutions-dashboard.views
   (:use
    [decline.core :only (validations validate-val)]
-   [ring.util.response :only (redirect)]
+   [ring.util.response :only (redirect response)]
    [solutions-dashboard.trello :only (get-user-projects)])
   (:require
    [solutions-dashboard.config  :as config]
@@ -41,13 +41,12 @@
 
 
 (defn get-all-employees []
-  (sql/with-query-results rs ["select * from employees"]
+  (sql/with-query-results rs ["select * from employees order by trello_username desc"]
     (into [] rs)))
 
 (defn get-employee [id]
-  (sql/with-query-results rs ["select * from employees where id = ?" id]
+  (sql/with-query-results rs ["select name,email,trello_username,harvest_id from employees where id = ?" id]
     (first rs)))
-
 
 (defn show-all-employees
   "View to show all of the currently configured employees
@@ -89,13 +88,23 @@
     (if errors (json-response errors 400)
         (json-response (insert-employee! form)))))
 
+
+(defn update-employee [req]
+  (let [id (Integer/parseInt (:id (:params req)))
+        form (:params req)]
+    (sql/update-values
+     :employees ["id = ?" id]
+     ;; drop the id from the form map
+     ;; because we don't want to allow users to update an employee's id
+     (dissoc form :id))
+    (response "")))
+
 (defn remove-employee
   "We all need to be able to remove employees"
   [req]
   (let [id (Integer/parseInt (:id (:params req)))]
     (sql/delete-rows :employees ["id=?" id])
     (json-response "okay")))
-
 
 (defn show-trello-info
   "Pass the trello information to the client"
@@ -111,7 +120,6 @@
 (defn show-harvest-projects
   [req]
   (json-response (harvest/get-projects)))
-
 
 (defn view-send-email [req]
   (let [e (get-employee (Integer/parseInt (:id (:params req))))]

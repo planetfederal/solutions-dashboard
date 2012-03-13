@@ -27,6 +27,20 @@ var show_error = function (e) {
  };
 
 
+var progress = function () {
+  
+};
+
+/* This function gets called once */
+var progress_bar = function (options) { 
+  
+  var wrap = options.wrap; //  the wrapper for the progress bar
+  
+  var init =  setInterval(function () { progress(wrap) }, 1000);
+  return init;
+};
+
+
 /* function to populate a from an array of objects */
 var populate_form = function (options) { 
   var form = options.form;
@@ -151,7 +165,7 @@ var show_trello  = function (app, trello_info) {
       table = build_table({
         id: 'trello_table',
         'classes': ['table','table-bordered'],
-        headers: ['Project', 'Tasks']
+        headers: ['Project', '']
       });
   table.appendTo(app);
 
@@ -161,11 +175,16 @@ var show_trello  = function (app, trello_info) {
         tasks = $('<td/>').appendTo(tr);      
     tr.appendTo(table);
 
-    _.map(p.tasks, function (t) {
-      var ol = $('<ol/>'),
-          task_name = $('<p/>', {text: t.name}).appendTo(ol);
-      ol.appendTo(tasks);
+    var task_table = build_table({
+      id: 'trello_tasks',
+      'classes': ['table', 'table-bordered'],
+      headers: ['Task name', 'Task due date']
+    }).appendTo(tasks);
 
+    _.map(p.tasks, function (t) {
+      var ttr = $('<tr/>').appendTo(task_table);
+      $('<td/>', {text: t.name}).appendTo(ttr);
+      $('<td/>', {text: t.due}).appendTo(ttr);
     });
 
   });  
@@ -199,9 +218,10 @@ var show_harvest = function (app, projects) {
 
     var task_table = build_table({
       id: 'task-table',
-      'classes': ['table'],
+      'classes': ['table', 'table-bordered'],
       headers: ['Task name', 'Task Hours']
-    }).appendTo(tasks)
+    }).appendTo(tasks);
+
     
     _.map(p.tasks, function(t) { 
       var ttr = $('<tr/>');
@@ -217,6 +237,26 @@ var show_harvest = function (app, projects) {
 
 };
 
+
+/* */
+var populate_user_info = function (model, user_info) {
+  user_info.empty();
+  var attrs = model.attributes;
+  for (var key in attrs) { 
+    var row = $('<div/>', {'class': 'row'});
+    $('<p/>', {'class': 'span3',text: key}).appendTo(row);
+    $('<p/>', {'class': 'span3', text: attrs[key]}).appendTo(row);
+    row.appendTo(user_info);
+  };      
+};
+
+var format_form_data = function (form) { 
+  var data = {};
+  _.each(form.serializeArray(), function(field) { 
+    data[field.name] = field.value;
+  });
+  return data;
+};
 
 /* */
 var ViewEmployee = Backbone.View.extend({
@@ -254,31 +294,62 @@ var ViewEmployee = Backbone.View.extend({
 
     $('<hr/>').appendTo(wrap);
 
-    var attrs = this.model.attributes;
-    for (var key in attrs) { 
-      var row = $('<div/>', {'class': 'row'});
-      $('<p/>', {'class': 'span3',text: key}).appendTo(row);
-      $('<p/>', {'class': 'span3', text: attrs[key]}).appendTo(row);
-      row.appendTo(wrap);      
-    };
+    var user_info = $('<div/>');    
+    user_info.appendTo(wrap);
+
+    populate_user_info(model, user_info); // populate the user info section
+
+    edit.click(function () {
+      user_info.empty();
+      var form = $('<form/>');
+
+      var inputs = _.filter(_.keys(model.attributes), function(attr) { 
+        if (attr !== 'id') {
+          return attr;
+        }
+      });
+
+      _.map(inputs, function(input) {
+        $('<label/>', {text: input}).appendTo(form);
+        $('<input/>', {name: input, value: model.attributes[input]}).appendTo(form);
+
+      });
+            
+      form.appendTo(user_info);
+      var cancel = $('<a/>',{'class': 'btn', 'text': 'Cancel'}).appendTo(user_info);
+
+      cancel.click(function () {
+        populate_user_info(model, user_info);
+      });
+
+      var save   = $('<a/>', {'class': 'btn', 'text': 'Save'}).appendTo(user_info);
+      save.click(function () {
+        var data = format_form_data(form);
+        model.save(data, {
+          success: function () { 
+            populate_user_info(model, user_info); // populate the user info section
+          },
+          error:   function (m, e) {
+            alert(e);
+          }
+        });
+      });
+
+    });
 
     wrap.appendTo(app);
 
     $.ajax({
-      url: '/employees/' + this.model.get('id') + '/get-trello-info',
-      success: function (trello_info) {
-        show_trello(app, trello_info);
-      },
-      error: function (e) {show_error(e)}
-    });
+      url: '/employees/' + this.model.get('id') + '/get-trello-info',     
+    }).done(function (trello_info) {
+      show_trello(app, trello_info);
+    }).fail(function (e) {show_error(e)});
 
-    $ .ajax({
+    $.ajax({
       url: '/employees/' + this.model.get('id') + '/get-harvest-info',
-      success: function (harvest) { 
-        show_harvest(app, harvest);
-      },
-      error:   function (e) {show_error(e);}
-    });
+    }).done(function (harvest) {
+      show_harvest(app, harvest);
+    }).fail(function (e) { show_error(e)});
 
     return this;
   }
