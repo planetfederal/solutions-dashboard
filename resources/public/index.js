@@ -7,37 +7,53 @@
 
 /* function to show an error to an end user */
 var show_error = function (e) {
-
-  // var error_div = $('<div>', {'class': 'alert'}),
-  //     width = 400,
-  //     error_msg = $('<p/>',  {text: e.responseText});
-
-  // error_div.css('width', width)
-  //   .css('height', 300)
-  //   .css('margin', 'auto')
-
-
-  // var close = $('<a/>', {'class': 'close', 'data-dismiss': 'alert', text: 'X'}).appendTo(error_div);
-  // close.click(function () { error_div.remove() }); 
-
-  // $('<h3/>',{'class': 'alert-heading',text: 'Something went wrong.'}).appendTo(error_div);
-  // error_msg.appendTo(error_div);
-  // error_div.appendTo($('body'));
-
- };
-
-
-var progress = function () {
-  
+  console.log(e);
 };
+
 
 /* This function gets called once */
 var progress_bar = function (options) { 
+  var progress = $('<div/>', {'class': 'progress progress-striped active progress-info'}),
+      bar = $('<div/>', {'class': 'bar'}).appendTo(progress);      
   
-  var wrap = options.wrap; //  the wrapper for the progress bar
+  bar.width(100);
+  return progress;
+};
+
+
+/* */
+var get_user_details = function (options) {
+  var update;
+  var url = options.url,      
+      div = options.div,  
+      pbar = progress_bar({}),
+      bar = $(pbar.find('.bar')[0]), // get the actually bar from the div
+      done_callback = options.done_callback;
   
-  var init =  setInterval(function () { progress(wrap) }, 1000);
-  return init;
+  $.ajax({
+    url: url,
+    beforeSend: function () { 
+      pbar.appendTo(div);
+      update = setInterval(function() {        
+
+        if (bar.width() > pbar.width()) {
+          bar.width(0); // reset the progress width          
+        } else {
+          bar.width(bar.width() + 100);
+        };
+
+      }, 1000);
+    },
+    complete: function () {
+      pbar.remove();
+      clearInterval(update);
+    }
+  }).done(function (data) { 
+    done_callback(div, data);
+  }).fail(function (e) {
+    show_error(e);
+  });
+
 };
 
 
@@ -61,7 +77,7 @@ var populate_form = function (options) {
 };
 
 /* function to make building a table a little nicer */
-var build_table = function(options) {
+var build_table = function (options) {
 
   var classes = options.classes.join(' '),
       id = options.id,
@@ -161,8 +177,8 @@ var AddEmployee = Backbone.View.extend({
 
 /* */
 var show_trello  = function (app, trello_info) {
-  var title = $('<h3/>', {text: 'Trello information'}).appendTo(app),
-      table = build_table({
+
+  var table = build_table({
         id: 'trello_table',
         'classes': ['table','table-bordered'],
         headers: ['Project', '']
@@ -194,8 +210,7 @@ var show_trello  = function (app, trello_info) {
 /* */
 var show_harvest = function (app, projects) { 
 
-  var title = $('<h3/>', {text: 'Harvest information'}).appendTo(app),
-      table = build_table({
+  var table = build_table({
         id: 'harvest_table',
         'classes': ['table', 'table-bordered'],
         headers: ['Project name','Tasks']
@@ -329,7 +344,7 @@ var ViewEmployee = Backbone.View.extend({
           success: function () { 
             populate_user_info(model, user_info); // populate the user info section
           },
-          error:   function (m, e) {
+          error: function (m, e) {
             alert(e);
           }
         });
@@ -339,17 +354,26 @@ var ViewEmployee = Backbone.View.extend({
 
     wrap.appendTo(app);
 
-    $.ajax({
-      url: '/employees/' + this.model.get('id') + '/get-trello-info',     
-    }).done(function (trello_info) {
-      show_trello(app, trello_info);
-    }).fail(function (e) {show_error(e)});
 
-    $.ajax({
+    var trello_con  = $('<div/>').appendTo(app);
+    $('<h3/>', {text: 'Trello information'}).appendTo(trello_con);
+
+    var harvest_con = $('<div/>').appendTo(app);
+    $('<h3/>', {text: 'Harvest information'}).appendTo(harvest_con);
+
+
+    get_user_details({
+      url: '/employees/' + this.model.get('id') + '/get-trello-info',     
+      div: trello_con,
+      done_callback: show_trello
+    });
+
+
+    get_user_details({
       url: '/employees/' + this.model.get('id') + '/get-harvest-info',
-    }).done(function (harvest) {
-      show_harvest(app, harvest);
-    }).fail(function (e) { show_error(e)});
+      div: harvest_con,
+      done_callback: show_harvest
+    });
 
     return this;
   }
