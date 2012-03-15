@@ -29,7 +29,8 @@
   (get-organization config/trello-opengeo-id))
 
 (defn get-opengeo-people []
-  (:members (make-trello-api-call :get (str "organization/" config/trello-opengeo-id ) {:members "all"})))
+  (:members
+   (make-trello-api-call :get (str "organization/" config/trello-opengeo-id ) {:members "all"})))
 
 (defn get-tasks-by-user [name]
   (:cards (make-trello-api-call :get (str "members/" name)  {:cards "all" :card_fields "all"})))
@@ -39,6 +40,30 @@
 
 (defn get-organization-boards [org]
   (make-trello-api-call :get (str "organizations/" org "/boards") {}))
+
+
+(defn get-list [id]
+  (make-trello-api-call :get (str "list/" id) {}))
+
+(defn classify-tasks-by-project
+  " This function groups the cards by their board in a manner thats useful for us.
+    returns a seq where each atom is an map with the boards under
+  the :tasks key"
+  [projects tasks]
+  (let [grouped-tasks (group-by :idBoard tasks)]
+    (for [project projects]
+      (assoc project :tasks (get grouped-tasks (:id project))))))
+
+(defn classify-tasks-by-list
+  "After grouping each card by project we also need to group each sub
+  task by list"
+  [projects]
+  (for [project projects]
+    (let [grouped-tasks (group-by :idList (:tasks project))]
+      (assoc project :lists 
+             (for [list (keys grouped-tasks)]
+               (assoc (get-list list) :tasks (get grouped-tasks list))
+               )))))
 
 
 (defn get-user-projects
@@ -54,8 +79,9 @@
                    :get
                    (str "members/" person)
                    {:boards "all" :board_fields "all" :cards "all" :card_fields "all"})
-        grouped-tasks (group-by :idBoard (:cards user-info))]
-    (dissoc  (assoc user-info :projects
-                    (for [project (:boards user-info)]
-                      (assoc project  :tasks (get grouped-tasks (:id project)))))
-             :boards :cards)))
+        projects (classify-tasks-by-project (:boards user-info) (:cards user-info))]
+    (assoc user-info :projects (classify-tasks-by-list projects))))
+
+
+(defn test-lists []
+  (get-user-projects "ivanwillig"))
