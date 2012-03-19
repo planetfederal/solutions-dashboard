@@ -10,19 +10,21 @@
 (defn sum-hours [entries]
   (reduce (fn [rs n] (+ rs (Double/parseDouble (:hours n)))) 0 entries))
 
-(defn build-harvest [str-builder harvest]
-  (.append str-builder "Last week \n\n")
+(defn build-harvest [st harvest]
+  (.append st "Last week \n\n")
   (doseq [pr harvest]
-    (.append str-builder (str "* " (:name pr) "\n"))
+    (.append st (str "* " (:name pr) "\n"))
     (doseq [t (:tasks pr)]
-      (.append str-builder (str "\t- " (:name t) " " (sum-hours (:entries t)) " hour(s) spent" "\n")))))
+      (.append st (str "\t- " (:name t) " " (sum-hours (:entries t)) " hour(s) spent" "\n")))))
 
-(defn build-trello [str-builder trello]
-  (.append str-builder "\n This week \n\n")
+(defn build-trello [st trello]
+  (.append st "\n This week \n\n")
   (doseq [project trello]
-    (.append str-builder (str "* " (:name project) "\n"))
-    (doseq [task (:tasks project)]
-      (.append str-builder (str "\t - " (:name task) "\n")))))
+    (.append st (str "* " (:name project) "\n"))
+    (doseq [l (:lists project)]
+      (.append st (str "\t - " (:name l) "\n"))
+      (doseq [t (:tasks l)]
+        (.append st (str "\t\t * " (:name t) "\n"))))))
 
 
 (defn build-message-body [user trello harvest]

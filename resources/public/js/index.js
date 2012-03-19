@@ -11,6 +11,17 @@ var show_error = function (e) {
 };
 
 
+var reset_nav = function (_active, all) { 
+// this is bull shit... but it seems to work
+  $('#dash-nav').children().each(function() { $(this).removeClass('active'); });
+  if (!all) {
+    $('#dash-nav').find(_active).each(function () { $(this).addClass('active') ;});
+  };
+
+};
+
+
+
 /* This function gets called once */
 var progress_bar = function (options) { 
   var progress = $('<div/>', {'class': 'progress progress-striped active progress-info'}),
@@ -114,15 +125,8 @@ var Employees = Backbone.Collection.extend({
 });
 
 
-var index = function (options) {
 
-
-};
-
-
-
-
-var show_harvest_projects = function (app, projects) {
+var show_all_harvest_projects = function (app, projects) {
   
   var table = build_table({
     id: 'harvest-table',
@@ -165,17 +169,20 @@ var show_trello  = function (app, trello_info) {
     var tr = $('<tr/>'),
         name = $('<td/>',{text: p.name}).appendTo(tr),
         tasks = $('<td/>').appendTo(tr);      
+
+    var list_ul = $('<ul/>').appendTo(tasks);
     tr.appendTo(table);
 
-    var task_table = build_table({
-      id: 'trello_tasks',
-      'classes': ['table', 'table-bordered'],
-      headers: ['List name',]
-    }).appendTo(tasks);
-
     _.map(p.lists, function (l) {
-      var ttr = $('<tr/>').appendTo(task_table);
-      $('<td/>', {text: l.name}).appendTo(ttr);
+      var list_li = $('<li/>', {text: l.name}).appendTo(list_ul);
+      var ul = $('<ul/>').appendTo(list_li);
+
+      _.map(l.tasks, function(t) {
+
+        $('<li/>', {text:t.name}).appendTo(ul);
+        
+      });
+
     });
 
   });  
@@ -186,10 +193,10 @@ var show_trello  = function (app, trello_info) {
 var show_harvest = function (app, projects) { 
 
   var table = build_table({
-        id: 'harvest_table',
-        'classes': ['table', 'table-bordered'],
-        headers: ['Project name',]
-      });
+    id: 'harvest_table',
+    'classes': ['table', 'table-bordered'],
+    headers: ['Project name',]
+  });
   table.appendTo(app);
   
   var round = function (n) { 
@@ -264,7 +271,8 @@ var ViewEmployee = Backbone.View.extend({
       $.ajax({
         url: '/employees/' + model.get('id') + '/send-email',
         type: 'POST',
-        success: function () { alert('Your email has been sent'); } 
+      }).done(function () {
+        alert('Your email has been sent');
       });
     });
 
@@ -355,14 +363,37 @@ var ViewEmployee = Backbone.View.extend({
 
 });
 
-var reset_nav = function (_active, all) { 
-// this is bull shit... but it seems to work
-  $('#dash-nav').children().each(function() { $(this).removeClass('active'); });
-  if (!all) {
-    $('#dash-nav').find(_active).each(function () { $(this).addClass('active') ;});
-  };
+/* main view function. This function renders a grid of the currently
+ * configured employees 
+ * Takes an object with two keys, an app and a collection key.
+ * currently uses slickgrid to render a sortable table.
+ */
+var index_view = function (options) {  
+  var app = options.app,
+      columns = [{id: 'name',
+                  field:'name',
+                  name: 'Employee name', 
+                  renderer: function(value, row) {
+                    return $('<a/>', {
+                      text: row.get('name'),
+                      href: '#employee/' + row.get('id')
+                    }); }
+                 },
+                 {id: 'email', field: 'email', name: 'Employee email'},
+                 {id: 'trello_username', field: 'trello_username', name: 'Employee Trello username'}
+                ]
+  app.empty();
 
+
+  var grid = new Grid({
+    columns: columns,
+    element: $('<table/>', {id: 'grid'}).appendTo(app),
+    collection: options.collection
+  });
+  
 };
+
+
 
 var Application = Backbone.Router.extend({
   routes: { 
@@ -373,6 +404,24 @@ var Application = Backbone.Router.extend({
     
   },
 
+
+  index: function () { 
+    reset_nav('#index');
+    var employees = new Employees();
+    employees.fetch({
+      success: function () {
+        index_view({
+          app: $('#application'),
+          collection: employees
+        });
+      },
+      error: function () { 
+        console.log('error');
+      }
+    });
+  },
+
+
   harvest: function () { 
     var app = $('#application').empty();
     reset_nav('#harvest');
@@ -381,7 +430,7 @@ var Application = Backbone.Router.extend({
       async: false,
       url: '/show-harvest-projects',
       success: function (projects) {
-        show_harvest_projects(app, projects);
+        show_all_harvest_projects(app, projects);
       },
       error: function (e) {show_error(e); }
     });
@@ -401,23 +450,6 @@ var Application = Backbone.Router.extend({
       }
     });
 
-  },
-
-  index: function () { 
-    reset_nav('#index');
-    var employees = new Employees();
-    employees.fetch({
-      success: function () {
-        var view = new Index({
-          collection: employees,
-          el: $('#application')
-        });
-        view.render();
-      },
-      error: function () { 
-        console.log('error');
-      }
-    });
   },
   
   new: function () { 

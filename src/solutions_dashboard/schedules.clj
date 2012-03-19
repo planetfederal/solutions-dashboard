@@ -48,6 +48,6 @@
     (.scheduleJob sched job-d trigger)
     (.start sched)))
 
-(defn -main [& args]
+(defn main [& args]
   (let [sched (StdSchedulerFactory/getDefaultScheduler)]
     (boot-schedule sched) sched))

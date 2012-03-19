@@ -16,4 +16,5 @@
                  [postgresql "9.0-801.jdbc4"]]
   :dev-dependencies [[swank-clojure "1.4.0"]
                      [lein-ring "0.5.4"]]
-  :ring {:handler solutions-dashboard.core/app})
+  :ring {:handler solutions-dashboard.core/app
+         :init    solutions-dashboard.schedules/main})
