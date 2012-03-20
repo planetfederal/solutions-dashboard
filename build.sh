@@ -15,5 +15,8 @@ curl -XGET http://documentcloud.github.com/underscore/underscore-min.js >> under
 echo "backbone"
 curl -XGET http://documentcloud.github.com/backbone/backbone-min.js >> backbone.min.js
 
-echo "slickgrid"
-git clone https://github.com/mleibman/SlickGrid.git slickgrid
+echo "checking out the twitter css lib thing"
+cd ../../
+rm -rf bootstrap
+curl -O http://twitter.github.com/bootstrap/assets/bootstrap.zip
+unzip bootstrap.zip
