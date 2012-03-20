@@ -381,7 +381,7 @@ var index_view = function (options) {
                  },
                  {id: 'email', field: 'email', name: 'Employee email'},
                  {id: 'trello_username', field: 'trello_username', name: 'Employee Trello username'}
-                ]
+                ];
   app.empty();
 
 
