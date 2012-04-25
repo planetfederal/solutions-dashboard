@@ -34,11 +34,11 @@
     (.add past (Calendar/DATE) diff)
     (list past now)))
 
-(defn one-week []
+(defn two-weeks []
   (map #(vector
          (.get % (Calendar/YEAR))
          (+ (.get % (Calendar/MONTH)) 1)
-         (.get % (Calendar/DAY_OF_MONTH))) (time-difference -7)))
+         (.get % (Calendar/DAY_OF_MONTH))) (time-difference -14)))
 
 (defn who-am-i? []
   (make-harvest-api-call "account/who_am_i" {}))

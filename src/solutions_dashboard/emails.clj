@@ -1,6 +1,7 @@
 (ns solutions-dashboard.emails
   (:import [java.util Date])
   (:require
+   [hiccup.core :as html]
    [postal.core :as postal]
    [clojure.java.jdbc :as sql]
    [solutions-dashboard.config :as config]
@@ -8,38 +9,52 @@
    [solutions-dashboard.trello :as trello]))
 
 (defn sum-hours [entries]
-  (reduce (fn [rs n] (+ rs (Double/parseDouble (:hours n)))) 0 entries))
+  (/ (Math/round (* 100
+                    (reduce (fn [rs n] (+ rs (Double/parseDouble (:hours n)))) 0 entries)
+                    )) 100.0))
 
-(defn build-harvest [st harvest]
-  (.append st "Last week \n\n")
-  (doseq [pr harvest]
-    (.append st (str "* " (:name pr) "\n"))
-    (doseq [t (:tasks pr)]
-      (.append st (str "\t- " (:name t) " " (sum-hours (:entries t)) " hour(s) spent" "\n")))))
+(defn build-harvest
+  "TODO add time"
+  [harvest]
+  [:div
+   [:p "Time reported over the last two weeks"]
+   [:ul
+    (for [pr harvest]
+      [:li (:name pr)
+       [:ul
+        (for [t (:tasks pr)]
+          [:li [:p (:name t) (str (sum-hours (:entries t)) "hour(s) spent" )]])]])]])
 
-(defn build-trello [st trello]
-  (.append st "\n This week \n\n")
-  (doseq [project trello]
-    (.append st (str "* " (:name project) "\n"))
-    (doseq [l (:lists project)]
-      (.append st (str "\t - " (:name l) "\n"))
-      (doseq [t (:tasks l)]
-        (.append st (str "\t\t * " (:name t) "\n"))))))
+(defn build-trello [trello]
+  [:ul
+   (for [type trello]
+     [:li [:p (str (clojure.string/capitalize (name (first type))) " tasks in Trello")]
+      [:ul      
+       (for [project (second type)]
+         (for [task (:tasks project)]
+           [:li (:name (:project project)) " " (:name task)]
+           ))]])])
 
 
 (defn build-message-body [user trello harvest]
-  (let [str-builder (StringBuilder.)]
-    (.append str-builder "-------------------- \n")
-    (build-harvest str-builder harvest)
-    (build-trello str-builder trello)
-    (.append str-builder "-------------------- \n")
-    (.toString str-builder)))
+  (html/html
+   [:h3 "This is an automatically-generated email showing the time you've reported to Harvest and tasks you've been assigned in Trello."]
+   (build-harvest harvest)
+   [:br] [:br]
+   (build-trello trello)
+   [:br]
+   [:p "Current and Upcoming Priorities - see the "
+    [:a {:href " https://docs.google.com/a/opengeo.org/spreadsheet/ccc?key=0AjFRvgbAX5-OdGVfVGJTaHBqRlpEV1R4bDVyQTB6bkE&pli=1#gid=0"} "Solutions Team Resources document:"]]
+   [:p "See any errors? Make your updates now!"]
+   [:p [:a {:href "https://opengeo.harvestapp.com/daily"}
+        "https://opengeo.harvestapp.com/daily"]]
+   [:p [:a {:href "https://trello.com/"} "https://trello.com/"]]))
 
 
 (defn build-message [e]
-  (let [trello   (:projects (trello/get-user-projects (:trello_username  e)))
-        week     (harvest/one-week)
-        harvest  (harvest/get-user-tasks e (first week) (second week))]
+  (let [trello    (trello/get-filtered-tasks (:trello_username  e))
+        weeks     (harvest/two-weeks)
+        harvest   (harvest/get-user-tasks e (first weeks) (second weeks))]
     (build-message-body e trello harvest)))
 
 
@@ -53,7 +68,8 @@
    {:from ""
     :to [(:email e)]
     :subject (str "Priorities for " (:name e))
-    :body body}))
+    :body [{:type "text/html"
+            :content body}]}))
 
 (defn send-message [e]
   (send-email e (build-message e)))

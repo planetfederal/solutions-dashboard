@@ -62,8 +62,9 @@
     (let [grouped-tasks (group-by :idList (:tasks project))]
       (assoc project :lists 
              (for [list (keys grouped-tasks)]
-               (assoc (get-list list) :tasks (get grouped-tasks list))
-               )))))
+               (assoc (get-list list)
+                 :project project
+                 :tasks (get grouped-tasks list)))))))
 
 
 (defn get-user-projects
@@ -83,5 +84,15 @@
     (assoc user-info :projects (classify-tasks-by-list projects))))
 
 
+(defn get-filtered-tasks [person]
+  (let [user-info (get-user-projects person)
+        ;; filter out all of the projects that don't have any tasks
+        projects (filter #(not (nil? (:tasks %))) (:projects user-info))]
+    ;; this is bad... figure out a way to handle this better.
+    {:current (flatten
+               (map (fn [p] (filter #(= (:name %) "Current") (:lists p))) projects))
+     :upcoming (flatten
+                (map (fn [p] (filter #(= (:name %) "Upcoming") (:lists p)) )  projects))}))
+
 (defn test-lists []
-  (get-user-projects "ivanwillig"))
+  (get-filtered-tasks "jj0hns0n"))

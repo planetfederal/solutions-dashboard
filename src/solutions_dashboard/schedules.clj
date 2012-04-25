@@ -45,7 +45,7 @@
   (let [job (Task.)
         job-d (make-job-details job "job1" "group1")
         ;; for now run the job every 30 seconds
-        trigger (make-cron-trigger "trigger1" "group1" "0 0 12 * * ?")]
+        trigger (make-cron-trigger "trigger1" "group1" "0 16 * * 5 ?")]
     (.scheduleJob sched job-d trigger)
     (.start sched)))
 

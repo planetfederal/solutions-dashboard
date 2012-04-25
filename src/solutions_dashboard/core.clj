@@ -8,6 +8,7 @@
    [solutions-dashboard.views  :as views]
    [solutions-dashboard.config :as config]
    [solutions-dashboard.auth   :as auth]
+   [solutions-dashboard.schedules   :as sched]
    [clojure.java.io    :as io]
    [compojure.handler  :as handler]
    [compojure.response :as response]
@@ -16,6 +17,8 @@
 
 (defroutes main-routes
   (GET    "/"          [] (io/resource "public/index.html"))
+  (GET    "/sched"     [] (fn [req] (str @sched/schedulers)))
+
   (GET    "/login"     [] (io/resource "public/login.html"))
   (POST   "/login"     [] views/post-login)
   (GET    "/logout"    [] views/logout)
@@ -32,7 +35,7 @@
      (GET    "/get-harvest-info" [id] views/show-harvest-info))
 
   (route/resources "/public" )
-  (route/not-found (views/page-not-found {})))
+  (route/not-found (str "Unable to find the resource you requested")))
 
 
 (defn wrap-dev-db-connection [handler]

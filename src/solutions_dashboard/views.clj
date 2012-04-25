@@ -1,12 +1,12 @@
 (ns solutions-dashboard.views
   (:use
    [decline.core :only (validations validate-val)]
-   [ring.util.response :only (redirect response)]
-   [solutions-dashboard.trello :only (get-user-projects)])
+   [ring.util.response :only (redirect response)])
   (:require
    [solutions-dashboard.config  :as config]
    [solutions-dashboard.harvest :as harvest]
    [solutions-dashboard.auth    :as auth]
+   [solutions-dashboard.trello    :as trello]
    [solutions-dashboard.emails  :as emails]
    [clojure.data.json  :as json]
    [clojure.java.jdbc  :as sql]))
@@ -110,12 +110,12 @@
   "Pass the trello information to the client"
   [req]
   (let [employee (get-employee (Integer/parseInt (:id (:params req))))]
-    (json-response (get-user-projects (:trello_username employee)))))
+    (json-response (trello/get-filtered-tasks (:trello_username employee)))))
 
 (defn show-harvest-info [req]
   (let [employee (get-employee (Integer/parseInt (:id (:params req))))
-        week (harvest/one-week)]
-    (json-response (harvest/get-user-tasks employee (first week) (second week)))))
+        weeks (harvest/two-weeks)]
+    (json-response (harvest/get-user-tasks employee (first weeks) (second weeks)))))
 
 (defn show-harvest-projects
   [req]

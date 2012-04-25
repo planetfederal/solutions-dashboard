@@ -156,7 +156,7 @@ var AddEmployee = Backbone.View.extend({
 });
 
 /* */
-var show_trello  = function (app, trello_info) {
+var show_trello  = function (app, lists) {
 
   var table = build_table({
         id: 'trello_table',
@@ -165,27 +165,27 @@ var show_trello  = function (app, trello_info) {
       });
   table.appendTo(app);
 
-  _.map(trello_info.projects, function (p) { 
-    var tr = $('<tr/>'),
-        name = $('<td/>',{text: p.name}).appendTo(tr),
-        tasks = $('<td/>').appendTo(tr);      
+  
+  for (var key in lists) { 
+    var tr = $('<tr/>').appendTo(table),
+        trello_list = lists[key];
 
-    var list_ul = $('<ul/>').appendTo(tasks);
-    tr.appendTo(table);
+    $('<td/>', {text: key}).appendTo(tr);
 
-    _.map(p.lists, function (l) {
-      var list_li = $('<li/>', {text: l.name}).appendTo(list_ul);
-      var ul = $('<ul/>').appendTo(list_li);
+    var tasks = $('<td/>').appendTo(tr);
 
-      _.map(l.tasks, function(t) {
+    _.map(trello_list, function(list) {
 
-        $('<li/>', {text:t.name}).appendTo(ul);
+      var ul = $('<ul/>').appendTo(tasks);
+      
+      _.map(list.tasks, function(task) {
+        $('<li/>', {text: list.project.name + ' : ' +task.name}).appendTo(ul);
         
       });
-
     });
 
-  });  
+  };
+
 
 };
 

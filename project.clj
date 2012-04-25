@@ -14,7 +14,8 @@
                  [org.clojure/data.json "0.1.2"]
                  [org.clojure/data.csv "0.1.2"]
                  [postgresql "9.0-801.jdbc4"]]
+
   :dev-dependencies [[swank-clojure "1.4.0"]
                      [lein-ring "0.5.4"]]
-  :ring {:handler solutions-dashboard.core/app
-         :init    solutions-dashboard.schedules/main})
+  :ring {:handler solutions-dashboard.core/app       
+         :init    solutions-dashboard.schedules/main })
