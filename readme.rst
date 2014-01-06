@@ -1,7 +1,6 @@
-
-===========================
-OpenGeo solutions dashboard
-===========================
+=============================
+Boundless solutions dashboard
+=============================
 
 Introduction
 ------------
